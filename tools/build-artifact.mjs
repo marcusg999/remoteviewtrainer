@@ -26,7 +26,15 @@ const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)[1]
   .replace(/<script[^>]*src="[^"]*"[^>]*><\/script>/gi, '')
   .trim();
 
+// The artifact host supplies its own <head>, so anything in the source page's
+// head is dropped. The font links have to be carried into the page content or
+// the published build silently falls back to system faces and loses the whole
+// typographic treatment. Google Fonts is on the artifact CSP allowlist.
+const fontLinks = (html.match(/<link[^>]*fonts\.(?:googleapis|gstatic)\.com[^>]*>/g) || []).join('\n');
+if (!fontLinks) console.warn('WARNING: no Google Fonts links found to carry over');
+
 const page = `<title>Ganzfeld</title>
+${fontLinks}
 <style>
 /* The host skeleton pads :root for safe areas and sets a body font; this is a
    full-bleed canvas game, so it takes the whole viewport back. */

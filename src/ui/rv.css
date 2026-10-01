@@ -402,3 +402,43 @@
 /* The rank state sits on its own line rather than trailing a separator that
    orphans when the hint above it wraps. */
 .rv-rankstate{ display:block; margin-top:3px; }
+
+/* ---------------------------------------------------------------
+   The ideogram pad tells you its own state.
+
+   The window used to drain on a progress bar while the paper itself
+   looked identical at second 9 and second 1. It warms as the window
+   runs out, then settles shut.
+   --------------------------------------------------------------- */
+.rv-pad{ transition:border-color .4s ease-out, box-shadow .4s ease-out; }
+.rv-pad.closing{
+  border-color:#e8a33d;
+  box-shadow:0 0 0 1px rgba(232,163,61,.3), 0 0 18px rgba(232,163,61,.18);
+}
+.rv-pad.spent{
+  border-color:rgba(232,163,61,.35);
+  box-shadow:none;
+  animation:padSettle .18s ease-out;
+}
+@keyframes padSettle{
+  0%   { transform:scaleY(1); }
+  45%  { transform:scaleY(.985); }
+  100% { transform:scaleY(1); }
+}
+
+/* UNDO and CLEAR sit inside the pad's top edge. Below the pad they were
+   under the drawing hand on a phone, and raising them to a 44px target
+   had pushed them further under it. */
+.rv-padwrap{ position:relative; }
+.rv-padtools{
+  position:absolute; top:8px; right:8px; z-index:3;
+  display:flex; gap:6px; margin:0;
+}
+.rv-padtools .rv-padbtn{
+  min-height:44px; min-width:62px;
+  background:rgba(12,10,18,.82);
+  backdrop-filter:none;
+}
+@media (prefers-reduced-motion: reduce){
+  .rv-pad.spent{ animation:none; }
+}

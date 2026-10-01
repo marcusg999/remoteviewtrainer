@@ -304,8 +304,10 @@ export class RemoteViewRun {
     });
     pad.el.classList.add('rv-ideogram');
     this.pads.ideogram = pad;
-    wrap.appendChild(pad.el);
-    wrap.appendChild(padTools(pad));
+    const padwrap = el('div', 'rv-padwrap');
+    padwrap.appendChild(pad.el);
+    padwrap.appendChild(padTools(pad));
+    wrap.appendChild(padwrap);
 
     const timer = el('div', 'rv-timer');
     timer.appendChild(el('div', 'rv-timer-fill'));
@@ -322,7 +324,9 @@ export class RemoteViewRun {
     const total = this.ideogramMs;
     const t0 = performance.now();
     const fill = this._nodes.timer.querySelector('.rv-timer-fill');
+    const padEl = this.pads.ideogram?.el;
     this._nodes.timer.classList.remove('spent');
+    padEl?.classList.remove('closing', 'spent');
     const tick = () => {
       const k = Math.min(1, (performance.now() - t0) / total);
       fill.style.transform = `scaleX(${(1 - k).toFixed(3)})`;
@@ -330,8 +334,12 @@ export class RemoteViewRun {
       this._nodes.countdown.innerHTML = k >= 1
         ? 'Window <b>closed</b> — that is long enough'
         : `Window <b>${left}s</b>`;
+      // the pad itself warms as the window runs out, then settles when it shuts
+      if (k > 0.75) padEl?.classList.add('closing');
       if (k >= 1) {
         this._nodes.timer.classList.add('spent');
+        padEl?.classList.remove('closing');
+        padEl?.classList.add('spent');
         this._stopTimer();
       }
     };
@@ -428,8 +436,10 @@ export class RemoteViewRun {
     });
     pad.el.classList.add('rv-sketch');
     this.pads.sketch = pad;
-    wrap.appendChild(pad.el);
-    wrap.appendChild(padTools(pad));
+    const padwrap = el('div', 'rv-padwrap');
+    padwrap.appendChild(pad.el);
+    padwrap.appendChild(padTools(pad));
+    wrap.appendChild(padwrap);
     return wrap;
   }
 

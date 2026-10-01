@@ -8,8 +8,10 @@ import { CameraDirector } from './juice/shake.js';
 import { Tweens } from './juice/tween.js';
 import { FloatText } from './ui/floatText.js';
 import { ZenerRun, TRIALS, CHANCE } from './modes/zener.js';
+import { RemoteViewRun, buildRevealBlock } from './modes/remoteview.js';
 import { SYMBOLS, SYMBOL_LABEL, drawSymbol } from './scene/cardArt.js';
 import { logSession, career, allSessions, wipe, exportJson } from './core/store.js';
+import { renderCareer } from './ui/career.js';
 import { summarize, verdict } from './core/stats.js';
 import * as audio from './juice/audio.js';
 
@@ -59,6 +61,7 @@ lab.resize();
 
 let run = null;
 let screen = 'title';
+let sceneVisible = true;
 
 /* ---------- DOM ---------- */
 const el = (tag, cls, html) => {
@@ -99,6 +102,8 @@ uiLayer.innerHTML = `
     <p class="hint" id="z-hint">Name the card before it turns</p>
     <div class="picker" id="z-picker"></div>
   </section>
+
+  <section id="rv" class="screen"></section>
 
   <section id="stats" class="screen"></section>
 
@@ -141,10 +146,14 @@ function drawSymbolLight(ctx, sym, cx, cy, size) {
 /* ---------- screen routing ---------- */
 function show(name) {
   screen = name;
-  for (const id of ['title', 'zener', 'stats']) {
+  for (const id of ['title', 'zener', 'rv', 'stats']) {
     document.getElementById(id).classList.toggle('on', id === name);
   }
   if (name === 'stats') renderStats();
+  // The writing screens cover the canvas completely, so stop drawing the lab
+  // behind them. It saves a phone's battery and keeps the main thread free
+  // for the actual input the player is giving.
+  sceneVisible = (name === 'title' || name === 'zener');
 }
 
 uiLayer.addEventListener('click', (e) => {
@@ -154,16 +163,11 @@ uiLayer.addEventListener('click', (e) => {
   const dest = go.dataset.go;
   if (dest === 'zener') startZener();
   else if (dest === 'stats') show('stats');
-  else if (dest === 'rv') {
-    // Remote viewing ships in the next pass; say so plainly rather than
-    // dropping the player into an empty room.
-    toast('Remote viewing session — in build');
-  }
+  else if (dest === 'rv') startRemoteView();
 });
 
 document.getElementById('z-back').addEventListener('click', () => {
-  if (run) { run.dispose(); run = null; }
-  floatText.clear();
+  teardownRuns();
   show('title');
 });
 document.getElementById('z-mute').addEventListener('click', (e) => {
@@ -175,8 +179,7 @@ document.getElementById('z-mute').addEventListener('click', (e) => {
 
 /* ---------- zener flow ---------- */
 async function startZener() {
-  if (run) run.dispose();
-  floatText.clear();
+  teardownRuns();
   run = new ZenerRun(ctx, { closedDeck: false });
   onRunUpdate(run.snapshot());
   buildPips();
@@ -229,9 +232,17 @@ function onRunUpdate(s) {
 
 async function finishZener() {
   const rep = run.report();
+  // Per-symbol tallies feed the call-bias panel in the career log.
+  const callCounts = {}, targetCounts = {}, hitCounts = {};
+  for (const s of SYMBOLS) { callCounts[s] = 0; targetCounts[s] = 0; hitCounts[s] = 0; }
+  for (const r of rep.results) {
+    callCounts[r.guess]++;
+    targetCounts[r.target]++;
+    if (r.hit) hitCounts[r.target]++;
+  }
   logSession({
     mode: rep.mode, trials: TRIALS, hits: rep.hits, chance: CHANCE,
-    detail: { bestStreak: rep.bestStreak, durationMs: rep.durationMs },
+    detail: { bestStreak: rep.bestStreak, durationMs: rep.durationMs, callCounts, targetCounts, hitCounts },
   });
   audio.sfxResult(rep.z);
   director.addTrauma(rep.z >= 1.64 ? 0.5 : 0.15);
@@ -298,8 +309,9 @@ document.getElementById('result').addEventListener('click', async (e) => {
   document.getElementById('result').classList.remove('on');
   const act = a.dataset.act;
   if (act === 'again') await startZener();
-  else if (act === 'stats') { if (run) { run.dispose(); run = null; } show('stats'); }
-  else { if (run) { run.dispose(); run = null; } show('title'); }
+  else if (act === 'rv-again') await startRemoteView();
+  else if (act === 'stats') { teardownRuns(); show('stats'); }
+  else { teardownRuns(); show('title'); }
 });
 
 function fmtP(p) {
@@ -308,58 +320,74 @@ function fmtP(p) {
   return p.toFixed(4).replace(/^0/, '');
 }
 
+/* ---------- remote viewing flow ---------- */
+let rvRun = null;
+
+async function startRemoteView() {
+  teardownRuns();
+  const host = document.getElementById('rv');
+  host.innerHTML = '';
+  show('rv');
+
+  rvRun = new RemoteViewRun(ctx, {});
+  // begin() seals the target before any UI exists, so nothing the viewer can
+  // touch has been shown before the commitment is made.
+  await rvRun.begin();
+  rvRun.mountUI(host);
+
+  const rep = await rvRun.finish();
+  if (!rep) return;              // dispose() ran first
+  showRemoteViewResult(rep);
+}
+
+function showRemoteViewResult(rep) {
+  const body = document.getElementById('result-body');
+  const proof = rep.proof?.[0];
+  body.innerHTML = `
+    <div class="toprow">
+      <span class="chip">Remote viewing &middot; <b>1 trial</b></span>
+      <span class="chip">Chance <b>20%</b></span>
+      <span class="chip">Coord <b>${rep.coordinate}</b></span>
+    </div>
+    <h2 class="outlined">${rep.hit ? 'Hit' : 'Miss'}</h2>
+    <p class="lede">${rep.hit
+      ? 'You ranked the sealed target first. One trial proves nothing on its own — the career log is where this turns into a number.'
+      : `You ranked the target ${ordinal(rep.rankOfTarget)} of 5. Chance puts it first one time in five.`}</p>
+  `;
+  body.appendChild(buildRevealBlock(rep));
+  body.insertAdjacentHTML('beforeend', `
+    <div class="row" style="margin-top:14px">
+      <button class="btn" data-act="rv-again">New coordinate</button>
+      <button class="btn ghost" data-act="stats">Career log</button>
+      <button class="btn ghost" data-act="menu">Leave</button>
+    </div>
+    <div class="fineprint">
+      <b>Pre-registered.</b> The target and the display order of all five candidates were
+      sealed before the coordinate was shown to you.
+      Digest <code>${proof ? proof.digest.slice(0, 32) + '…' : 'n/a'}</code>,
+      salt <code>${proof ? proof.salt : 'n/a'}</code>,
+      payload <code>${proof ? proof.payload : 'n/a'}</code>.
+      Recompute <code>SHA-256(salt + ":" + payload)</code> to confirm neither could have
+      changed after you ranked them.
+    </div>
+  `);
+  document.getElementById('result').classList.add('on');
+}
+
+const ordinal = (n) => (n == null ? 'nowhere' : ['', 'first', 'second', 'third', 'fourth', 'fifth'][n] || `${n}th`);
+
+/** Tear down whichever run is live. Both modes own scene objects. */
+function teardownRuns() {
+  if (run) { run.dispose(); run = null; }
+  if (rvRun) { rvRun.dispose(); rvRun = null; }
+  floatText.clear();
+}
+
 /* ---------- career log ---------- */
 function renderStats() {
-  const c = career('zener');
-  const sessions = allSessions();
-  const v = verdict(c);
-  const host = document.getElementById('stats');
-  host.innerHTML = `
-    <div class="topbar">
-      <button class="iconbtn" data-go="back">&#8592;</button>
-      <div class="stat"><div class="k">Sessions</div><div class="v t-mono">${c.sessions.length}</div></div>
-      <div class="stat"><div class="k">Trials</div><div class="v t-mono">${c.trials}</div></div>
-      <div class="stat"><div class="k">Hits</div><div class="v t-mono">${c.hits}</div></div>
-    </div>
-    <div style="overflow-y:auto;padding:14px 2px;flex:1;">
-      <div class="card-panel" style="width:min(620px,96%);margin:0 auto;transform:none;">
-        <h2 class="outlined">Career Log</h2>
-        <p class="lede">${c.empty ? 'No trials recorded yet.' : `Pooled across ${c.sessions.length} session${c.sessions.length === 1 ? '' : 's'} at 20% chance.`}</p>
-        ${c.empty ? '' : `
-        <div class="verdict ${v.tone}">${v.label}</div>
-        <div class="statgrid">
-          <div class="cell"><div class="k">Hit rate</div><div class="v">${(c.rate * 100).toFixed(2)}%</div></div>
-          <div class="cell"><div class="k">Expected</div><div class="v">${c.expected.toFixed(1)}</div></div>
-          <div class="cell"><div class="k">z-score</div><div class="v">${c.z >= 0 ? '+' : ''}${c.z.toFixed(3)}</div></div>
-          <div class="cell"><div class="k">Exact p (1-tail)</div><div class="v">${fmtP(c.pExact)}</div></div>
-          <div class="cell"><div class="k">p (2-tail)</div><div class="v">${fmtP(c.pTwoTailed)}</div></div>
-          <div class="cell"><div class="k">95% CI</div><div class="v">${(c.ci.lo * 100).toFixed(1)}–${(c.ci.hi * 100).toFixed(1)}%</div></div>
-        </div>
-        <p class="fineprint" style="border:0;padding-top:4px">
-          A z of +1.96 or more happens by chance about 1 run in 40. Run enough sessions and
-          you <em>will</em> see one. That is what chance looks like, and it is why the pooled
-          figure above is the only one worth reading.
-        </p>`}
-        <div class="row" style="margin-top:14px">
-          <button class="btn" data-go="zener">New run</button>
-          <button class="btn ghost small" data-act="export">Export JSON</button>
-          <button class="btn ghost small" data-act="wipe">Wipe log</button>
-        </div>
-      </div>
-    </div>
-  `;
-  host.querySelector('[data-go="back"]').addEventListener('click', () => show('title'));
-  host.querySelector('[data-act="export"]').addEventListener('click', () => {
-    const blob = new Blob([exportJson()], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'ganzfeld-career.json';
-    a.click();
-  });
-  host.querySelector('[data-act="wipe"]').addEventListener('click', () => {
-    if (confirm('Erase the entire career log? Partial deletion is not offered, because it would corrupt the statistics.')) {
-      wipe(); renderStats();
-    }
+  renderCareer(document.getElementById('stats'), {
+    onBack: () => show('title'),
+    onPlay: () => startZener(),
   });
 }
 
@@ -409,10 +437,17 @@ function loop(now) {
   const dt = raw * TURBO;
 
   tweens.update(dt);
+  floatText.update(dt);
+
+  if (!sceneVisible) {
+    // Nothing of the lab is on screen; skip the whole 3D pass.
+    requestAnimationFrame(loop);
+    return;
+  }
+
   lab.update(dt);
   director.update(dt);
   particles.update(dt);
-  floatText.update(dt);
 
   if (run) {
     const t = lab.time;
@@ -437,5 +472,20 @@ requestAnimationFrame(loop);
 // first gesture unlocks audio anywhere on the page
 const unlockOnce = () => { audio.unlock(); audio.startAmbient(); removeEventListener('pointerdown', unlockOnce); };
 addEventListener('pointerdown', unlockOnce);
+
+/**
+ * Read-only test seam for the play harness, so it can wait on real state
+ * instead of guessing at sleep durations. It exposes no way to set a target,
+ * see one before the reveal, or influence a result.
+ */
+window.__ganzfeld = {
+  ready: () => !!(run && !run.busy && run.active && !run.finished),
+  finished: () => !!(run && run.finished),
+  resultOpen: () => !!document.querySelector('#result.on'),
+  index: () => (run ? run.index : -1),
+  screen: () => screen,
+  rvStage: () => (rvRun ? { i: rvRun.stageIndex, id: rvRun.stages[rvRun.stageIndex]?.id } : null),
+  quality,
+};
 
 console.log(`[ganzfeld] quality=${quality}`);

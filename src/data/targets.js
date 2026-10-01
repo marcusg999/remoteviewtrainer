@@ -148,6 +148,22 @@ function pine(ctx, w, h, x, baseY, ph, pw, c) {
   ply(ctx, w, h, [[x, baseY - ph], [x + pw, baseY], [x - pw, baseY]], c);
   ply(ctx, w, h, [[x, baseY - ph], [x + pw * 0.72, baseY - ph * 0.34], [x - pw * 0.72, baseY - ph * 0.34]], c);
 }
+/** Flattened cloud bank. Round speckles in a sky read as bubbles, not cloud. */
+function clouds(ctx, w, h, rnd, y0, y1, n, alpha) {
+  for (let i = 0; i < (n || 3); i++) {
+    const x = 0.08 + rnd() * 0.84;
+    const y = y0 + (y1 - y0) * rnd();
+    const rx = 0.09 + rnd() * 0.10;
+    ctx.fillStyle = `rgba(255,255,255,${(alpha ?? 0.72).toFixed(2)})`;
+    ctx.beginPath();
+    ctx.ellipse(x * w, y * h, rx * w, rx * w * 0.26, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse((x - rx * 0.3) * w, (y - 0.012) * h, rx * 0.5 * w, rx * w * 0.24, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function starfield(ctx, w, h, n, yMax, rnd) {
   for (let i = 0; i < n; i++) {
     const x = rnd() * w, y = rnd() * yMax * h, a = 0.35 + rnd() * 0.65;
@@ -262,8 +278,9 @@ export const TARGETS = [
         ctx.fillRect(0.57 * w, (0.32 + i * 0.12) * h, 0.43 * w, 0.045 * h);
         ctx.globalAlpha = 1;
       }
-      box(ctx, w, h, 0.43, 0.70, 0.14, 0.30, '#3f6e58');
-      curve(ctx, w, h, [[0.47, 1], [0.49, 0.88], [0.5, 0.78], [0.52, 0.70]], 'rgba(255,255,255,0.3)', 0.008);
+      ply(ctx, w, h, [[0.41, 0.68], [0.59, 0.68], [0.68, 1], [0.32, 1]], '#6b3f28');
+      curve(ctx, w, h, [[0.50, 0.68], [0.44, 0.78], [0.56, 0.88], [0.47, 1]], '#3f8fa0', 0.055);
+      curve(ctx, w, h, [[0.50, 0.68], [0.44, 0.78], [0.56, 0.88], [0.47, 1]], 'rgba(214,246,250,0.45)', 0.012);
       speckle(ctx, w, h, 14, 'rgba(60,24,12,0.35)', 0.02, 0.4, 0.4, 0.95, 0.01, r);
     },
   },
@@ -355,34 +372,63 @@ export const TARGETS = [
   {
     id: 'cathedral', name: 'Cathedral Interior',
     tags: ['stone', 'arches', 'tall', 'echo', 'cold', 'enclosed', 'coloured glass', 'sacred'],
-    describe: 'Inside a gothic cathedral: receding pointed arches, a vast cold vertical space, a rose window of coloured glass.',
+    describe: 'Inside a gothic cathedral: a nave of pointed arches receding into gloom, a vast cold vertical space, a rose window of coloured glass.',
     render(ctx, w, h) {
-      wash(ctx, w, h, '#1b1a2a', '#2e2a3c');
-      for (let i = 0; i < 4; i++) {
-        const k = i * 0.09, a = 0.9 - i * 0.18;
-        ctx.fillStyle = `rgba(92,86,110,${a.toFixed(2)})`;
-        for (const side of [0, 1]) {
-          const x = side ? 1 - 0.06 - k : 0.06 + k;
-          ctx.fillRect((x - 0.035) * w, (0.22 + k * 0.7) * h, 0.07 * w, (0.78 - k * 0.7) * h);
-          ctx.beginPath();
-          ctx.moveTo((x - 0.035) * w, (0.26 + k * 0.7) * h);
-          ctx.lineTo(x * w, (0.14 + k * 0.8) * h);
-          ctx.lineTo((x + 0.035) * w, (0.26 + k * 0.7) * h);
-          ctx.closePath(); ctx.fill();
-        }
+      const r = lcg(111);
+      wash(ctx, w, h, '#241f33', '#121020');
+      const arch = (hw, base, top) => {
+        const mid = top + (base - top) * 0.45;
+        ctx.beginPath();
+        ctx.moveTo((0.5 - hw) * w, base * h);
+        ctx.lineTo((0.5 - hw) * w, mid * h);
+        ctx.quadraticCurveTo((0.5 - hw * 0.72) * w, (top + (base - top) * 0.10) * h, 0.5 * w, top * h);
+        ctx.quadraticCurveTo((0.5 + hw * 0.72) * w, (top + (base - top) * 0.10) * h, (0.5 + hw) * w, mid * h);
+        ctx.lineTo((0.5 + hw) * w, base * h);
+        ctx.closePath();
+      };
+      // the nave, bay by bay, each one further away and darker
+      const shades = ['#5d5675', '#4e4864', '#413c55', '#363247', '#2c293c', '#232133'];
+      for (let i = 0; i < 6; i++) {
+        const t = i / 6;
+        ctx.fillStyle = shades[i];
+        arch(0.455 - t * 0.30, 1.0, 0.045 + t * 0.21);
+        ctx.fill();
       }
-      ply(ctx, w, h, [[0.5, 0.06], [0.70, 0.40], [0.30, 0.40]], '#3a3550');
+      ctx.strokeStyle = 'rgba(214,202,236,0.22)';
+      ctx.lineWidth = Math.max(0.8, 0.005 * S(w, h));
+      for (let i = 0; i < 6; i++) {
+        const t = i / 6;
+        arch(0.455 - t * 0.30, 1.0, 0.045 + t * 0.21);
+        ctx.stroke();
+      }
+      // the rose window closing the far end
       const cols = ['#d84a4a', '#3f7fd4', '#e8c23d', '#4fb46b', '#9a5fd0', '#e2873a'];
       for (let i = 0; i < 12; i++) {
-        const a0 = (i / 12) * Math.PI * 2, a1 = ((i + 1) / 12) * Math.PI * 2;
         ctx.fillStyle = cols[i % 6];
-        ctx.beginPath(); ctx.moveTo(0.5 * w, 0.30 * h);
-        ctx.ellipse(0.5 * w, 0.30 * h, 0.10 * w, 0.10 * w, 0, a0, a1);
+        ctx.beginPath();
+        ctx.moveTo(0.5 * w, 0.44 * h);
+        ctx.ellipse(0.5 * w, 0.44 * h, 0.085 * w, 0.085 * w, 0, (i / 12) * Math.PI * 2, ((i + 1) / 12) * Math.PI * 2);
         ctx.closePath(); ctx.fill();
       }
-      cir(ctx, w, h, 0.5, 0.30, 0.028, '#fff3cd');
-      ply(ctx, w, h, [[0.36, 1], [0.64, 1], [0.56, 0.44], [0.44, 0.44]], '#4b4560');
-      ply(ctx, w, h, [[0.42, 1], [0.58, 1], [0.54, 0.46], [0.46, 0.46]], 'rgba(255,240,200,0.14)');
+      ctx.strokeStyle = '#1b1828';
+      ctx.lineWidth = Math.max(1, 0.007 * S(w, h));
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(0.5 * w, 0.44 * h);
+        ctx.lineTo((0.5 + Math.cos(a) * 0.085) * w, (0.44 + Math.sin(a) * 0.085 * (w / h)) * h);
+        ctx.stroke();
+      }
+      elps(ctx, w, h, 0.5, 0.44, 0.085, 0.085 * (w / h), '#1b1828', 0.010);
+      cir(ctx, w, h, 0.5, 0.44, 0.022, '#fff3cd');
+      // light falling on the flagstones
+      ply(ctx, w, h, [[0.40, 0.62], [0.60, 0.62], [0.80, 1], [0.20, 1]], 'rgba(255,238,196,0.10)');
+      pline(ctx, w, h, [[0.20, 1], [0.44, 0.62]], 'rgba(255,238,196,0.12)', 0.006);
+      for (const x of [0.17, 0.83]) {
+        cir(ctx, w, h, x, 0.86, 0.013, '#ffd98a');
+        cir(ctx, w, h, x, 0.86, 0.030, 'rgba(255,200,110,0.14)');
+      }
+      speckle(ctx, w, h, 10, 'rgba(255,240,205,0.10)', 0.3, 0.7, 0.5, 0.9, 0.02, r);
     },
   },
   {
@@ -517,6 +563,7 @@ export const TARGETS = [
     render(ctx, w, h) {
       const r = lcg(171);
       wash(ctx, w, h, '#4d78a8', '#b9d2e4');
+      clouds(ctx, w, h, r, 0.08, 0.22, 2, 0.30);
       ply(ctx, w, h, [[0, 1], [0.22, 0.52], [0.40, 0.72], [0.50, 1]], '#6b7d93');
       ply(ctx, w, h, [[0.22, 0.52], [0.30, 0.60], [0.22, 0.60], [0.16, 0.62]], '#eef6fb');
       ply(ctx, w, h, [[0.30, 1], [0.52, 0.18], [0.60, 0.34], [0.70, 0.22], [0.95, 1]], '#55637a');
@@ -527,7 +574,6 @@ export const TARGETS = [
         pline(ctx, w, h, [[0.4 + i * 0.07, 0.56 + i * 0.02], [0.46 + i * 0.07, 0.86 + i * 0.01]], 'rgba(240,250,255,0.5)', 0.008);
       }
       box(ctx, w, h, 0, 0.96, 1, 0.04, '#e9f2f8');
-      speckle(ctx, w, h, 16, 'rgba(255,255,255,0.5)', 0, 1, 0, 0.3, 0.006, r);
     },
   },
   {
@@ -575,29 +621,55 @@ export const TARGETS = [
   },
   {
     id: 'railway-station', name: 'Railway Station',
-    tags: ['man-made', 'steel', 'tracks', 'converging', 'busy', 'glass roof', 'noise', 'grey'],
-    describe: 'A covered railway station: rails converging down the platform, a long arched glass-and-steel roof, a waiting train.',
+    tags: ['man-made', 'steel', 'tracks', 'converging', 'busy', 'glass roof', 'noise', 'bright'],
+    describe: 'A great glass-roofed railway terminus: a steel barrel vault full of daylight, rails converging down the platform, a train waiting.',
     render(ctx, w, h) {
-      wash(ctx, w, h, '#2b2f3c', '#4a4f5e');
-      ply(ctx, w, h, [[0.5, 0.08], [1.02, 0.0], [1.02, 0.62], [0.5, 0.40]], '#6a7183');
-      ply(ctx, w, h, [[0.5, 0.08], [-0.02, 0.0], [-0.02, 0.62], [0.5, 0.40]], '#596073');
-      for (let i = 0; i < 6; i++) {
-        pline(ctx, w, h, [[0.5, 0.18 + i * 0.035], [0.02 + i * 0.06, 0.12 + i * 0.08]], 'rgba(30,34,44,0.7)', 0.006);
-        pline(ctx, w, h, [[0.5, 0.18 + i * 0.035], [0.98 - i * 0.06, 0.12 + i * 0.08]], 'rgba(30,34,44,0.7)', 0.006);
+      const r = lcg(201);
+      wash(ctx, w, h, '#e4ecf3', '#b8c3cf');
+      // the vault, seen down its length
+      elp(ctx, w, h, 0.5, 0.74, 0.47, 0.60, '#eef5fb', Math.PI, Math.PI * 2);
+      // glazing bars radiating from the springing line
+      ctx.strokeStyle = 'rgba(104,118,136,0.55)';
+      ctx.lineWidth = Math.max(0.8, 0.004 * S(w, h));
+      for (let i = 1; i < 12; i++) {
+        const a = Math.PI + (i / 12) * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo((0.5 + Math.cos(a) * 0.10) * w, (0.74 + Math.sin(a) * 0.13) * h);
+        ctx.lineTo((0.5 + Math.cos(a) * 0.47) * w, (0.74 + Math.sin(a) * 0.60) * h);
+        ctx.stroke();
       }
-      box(ctx, w, h, 0, 0.60, 1, 0.40, '#30343f');
-      ply(ctx, w, h, [[0.46, 0.60], [0.54, 0.60], [0.92, 1], [0.08, 1]], '#565b68');
-      for (const off of [-0.10, 0.10]) {
-        pline(ctx, w, h, [[0.5 + off * 0.25, 0.60], [0.5 + off * 2.6, 1]], '#c6ccd6', 0.009);
+      // receding ribs: the depth cue
+      for (let i = 0; i < 7; i++) {
+        const t = i / 7, k = 1 - t * 0.80;
+        elps(ctx, w, h, 0.5, 0.74, 0.47 * k, 0.60 * k,
+          `rgba(72,86,104,${(0.85 - t * 0.55).toFixed(2)})`, 0.011 - t * 0.0055, Math.PI, Math.PI * 2);
+      }
+      elp(ctx, w, h, 0.5, 0.74, 0.085, 0.11, '#ffffff', Math.PI, Math.PI * 2);
+      // platform floor and its edges
+      box(ctx, w, h, 0, 0.74, 1, 0.26, '#aeb5bd');
+      ply(ctx, w, h, [[0, 0.80], [0.42, 0.745], [0.42, 0.775], [0, 0.90]], '#cdd3da');
+      ply(ctx, w, h, [[1, 0.80], [0.58, 0.745], [0.58, 0.775], [1, 0.90]], '#cdd3da');
+      ply(ctx, w, h, [[0.42, 0.745], [0.58, 0.745], [0.78, 1], [0.22, 1]], '#6f7681');
+      // rails
+      for (const off of [-1, 1]) {
+        pline(ctx, w, h, [[0.5 + off * 0.016, 0.75], [0.5 + off * 0.17, 1]], '#e6ebf0', 0.008);
       }
       for (let i = 0; i < 7; i++) {
-        const t = i / 7, y = 0.62 + t * t * 0.38, sp = 0.05 + t * 0.42;
-        pline(ctx, w, h, [[0.5 - sp, y], [0.5 + sp, y]], 'rgba(70,56,44,0.8)', 0.007);
+        const t = i / 7, y = 0.76 + t * t * 0.24, sp = 0.03 + t * t * 0.23;
+        pline(ctx, w, h, [[0.5 - sp, y], [0.5 + sp, y]], 'rgba(78,64,50,0.8)', 0.005 + t * 0.006);
       }
-      box(ctx, w, h, 0.41, 0.36, 0.18, 0.26, '#2a4f78');
-      box(ctx, w, h, 0.435, 0.40, 0.13, 0.08, '#aee0f2');
-      cir(ctx, w, h, 0.465, 0.56, 0.015, '#ffeeaa');
-      cir(ctx, w, h, 0.535, 0.56, 0.015, '#ffeeaa');
+      // the train, waiting at the far platform
+      box(ctx, w, h, 0.555, 0.56, 0.135, 0.19, '#1f6b4a');
+      box(ctx, w, h, 0.57, 0.59, 0.105, 0.055, '#bfe4f2');
+      box(ctx, w, h, 0.555, 0.70, 0.135, 0.028, '#e8c33f');
+      cir(ctx, w, h, 0.575, 0.675, 0.011, '#fff2b0');
+      cir(ctx, w, h, 0.668, 0.675, 0.011, '#fff2b0');
+      // hanging lamps
+      for (const x of [0.28, 0.72]) {
+        pline(ctx, w, h, [[x, 0.20], [x, 0.30]], '#5d6775', 0.004);
+        cir(ctx, w, h, x, 0.32, 0.022, '#fff0bc');
+      }
+      speckle(ctx, w, h, 8, 'rgba(40,48,60,0.45)', 0.1, 0.9, 0.84, 0.97, 0.012, r);
     },
   },
   {
@@ -674,6 +746,7 @@ export const TARGETS = [
     render(ctx, w, h) {
       const r = lcg(241);
       wash(ctx, w, h, '#4e8fd0', '#bcd9ef');
+      clouds(ctx, w, h, r, 0.10, 0.26, 3, 0.55);
       box(ctx, w, h, 0, 0.72, 1, 0.28, '#cfc7b5');
       for (let i = -5; i <= 5; i++) {
         pline(ctx, w, h, [[0.5 + i * 0.03, 0.74], [0.5 + i * 0.34, 1]], 'rgba(130,120,104,0.45)', 0.004);
@@ -687,7 +760,6 @@ export const TARGETS = [
       for (let i = 0; i < 9; i++) {
         pline(ctx, w, h, [[0.484, 0.20 + i * 0.045], [0.498, 0.20 + i * 0.045]], 'rgba(110,96,70,0.5)', 0.005);
       }
-      speckle(ctx, w, h, 10, 'rgba(255,255,255,0.5)', 0, 1, 0.1, 0.3, 0.012, r);
     },
   },
   {
@@ -817,31 +889,40 @@ export const TARGETS = [
   {
     id: 'tornado', name: 'Tornado',
     tags: ['wind', 'funnel', 'grey', 'violent', 'flat land', 'loud', 'spiral', 'moving'],
-    describe: 'A tornado funnel twisting from a black storm cloud down to flat open farmland, debris flying.',
+    describe: 'A tornado funnel twisting down from a black storm cloud to flat open farmland, debris flying out of its base.',
     render(ctx, w, h) {
       const r = lcg(301);
-      wash(ctx, w, h, '#40414f', '#8a8469', '#9f9a6c');
-      ctx.fillStyle = '#2b2c38';
+      wash(ctx, w, h, '#3a3b48', '#8a8469', '#a39c6c');
+      ctx.fillStyle = '#23242e';
       ctx.beginPath();
-      ctx.moveTo(0, 0); ctx.lineTo(w, 0); ctx.lineTo(w, 0.26 * h);
-      ctx.bezierCurveTo(0.7 * w, 0.34 * h, 0.3 * w, 0.18 * h, 0, 0.30 * h);
+      ctx.moveTo(0, 0); ctx.lineTo(w, 0); ctx.lineTo(w, 0.30 * h);
+      ctx.bezierCurveTo(0.7 * w, 0.40 * h, 0.3 * w, 0.20 * h, 0, 0.34 * h);
       ctx.closePath(); ctx.fill();
-      ctx.fillStyle = 'rgba(96,96,110,0.95)';
+      // the funnel: wide where it leaves the cloud, roped where it touches down
+      ctx.fillStyle = '#4e5060';
       ctx.beginPath();
-      ctx.moveTo(0.34 * w, 0.26 * h);
-      ctx.bezierCurveTo(0.42 * w, 0.52 * h, 0.52 * w, 0.62 * h, 0.52 * w, 0.84 * h);
+      ctx.moveTo(0.28 * w, 0.30 * h);
+      ctx.bezierCurveTo(0.38 * w, 0.54 * h, 0.46 * w, 0.62 * h, 0.47 * w, 0.84 * h);
       ctx.lineTo(0.60 * w, 0.84 * h);
-      ctx.bezierCurveTo(0.62 * w, 0.60 * h, 0.58 * w, 0.48 * h, 0.62 * w, 0.26 * h);
+      ctx.bezierCurveTo(0.63 * w, 0.60 * h, 0.60 * w, 0.50 * h, 0.68 * w, 0.30 * h);
       ctx.closePath(); ctx.fill();
-      for (let i = 0; i < 7; i++) {
-        const t = i / 7;
-        const cx = 0.48 + t * 0.08, cy = 0.30 + t * 0.52, rx = 0.14 * (1 - t * 0.78);
-        elps(ctx, w, h, cx, cy, rx, rx * 0.22, 'rgba(190,190,200,0.5)', 0.005);
+      ctx.fillStyle = 'rgba(126,128,142,0.9)';
+      ctx.beginPath();
+      ctx.moveTo(0.34 * w, 0.30 * h);
+      ctx.bezierCurveTo(0.42 * w, 0.54 * h, 0.49 * w, 0.62 * h, 0.50 * w, 0.84 * h);
+      ctx.lineTo(0.56 * w, 0.84 * h);
+      ctx.bezierCurveTo(0.58 * w, 0.60 * h, 0.56 * w, 0.50 * h, 0.60 * w, 0.30 * h);
+      ctx.closePath(); ctx.fill();
+      // the spiral banding that makes it read as rotating
+      for (let i = 0; i < 8; i++) {
+        const t = i / 8;
+        const cx = 0.46 + t * 0.07, cy = 0.33 + t * 0.50, rx = 0.19 * (1 - t * 0.80);
+        elps(ctx, w, h, cx, cy, rx, rx * 0.26, 'rgba(226,228,238,0.45)', 0.006);
       }
-      box(ctx, w, h, 0, 0.84, 1, 0.16, '#7a7347');
-      pline(ctx, w, h, [[0, 0.84], [1, 0.84]], 'rgba(50,46,30,0.5)', 0.004);
-      elp(ctx, w, h, 0.56, 0.845, 0.16, 0.035, 'rgba(140,135,120,0.6)');
-      speckle(ctx, w, h, 18, 'rgba(60,54,38,0.7)', 0.3, 0.85, 0.6, 0.86, 0.007, r);
+      box(ctx, w, h, 0, 0.84, 1, 0.16, '#7c7546');
+      pline(ctx, w, h, [[0, 0.84], [1, 0.84]], 'rgba(44,40,26,0.6)', 0.005);
+      elp(ctx, w, h, 0.53, 0.845, 0.19, 0.045, 'rgba(150,145,128,0.75)');
+      speckle(ctx, w, h, 26, 'rgba(48,43,28,0.8)', 0.25, 0.9, 0.58, 0.88, 0.008, r);
     },
   },
   {
@@ -896,3 +977,597 @@ export const TARGETS = [
       speckle(ctx, w, h, 12, 'rgba(255,255,255,0.6)', 0, 1, 0.1, 0.4, 0.006, r);
     },
   },
+  {
+    id: 'mosque', name: 'Domed Mosque',
+    tags: ['dome', 'minarets', 'sand stone', 'sacred', 'symmetry', 'warm', 'arches', 'man-made'],
+    describe: 'A sandstone mosque at dusk: one great dome flanked by two slim minarets, arched entrance, warm symmetry.',
+    render(ctx, w, h) {
+      const r = lcg(331);
+      wash(ctx, w, h, '#4c3a72', '#d58a63', '#f0c08a');
+      cir(ctx, w, h, 0.945, 0.095, 0.030, '#fff3d0');
+      box(ctx, w, h, 0, 0.84, 1, 0.16, '#6a4a48');
+      for (const mx of [0.17, 0.83]) {
+        box(ctx, w, h, mx - 0.028, 0.26, 0.056, 0.58, '#e7cfa8');
+        box(ctx, w, h, mx - 0.038, 0.40, 0.076, 0.03, '#c9ab7e');
+        elp(ctx, w, h, mx, 0.26, 0.042, 0.055, '#e7cfa8', Math.PI, Math.PI * 2);
+        pline(ctx, w, h, [[mx, 0.21], [mx, 0.15]], '#c9ab7e', 0.008);
+        cir(ctx, w, h, mx, 0.14, 0.014, '#f6e0b4');
+      }
+      box(ctx, w, h, 0.26, 0.56, 0.48, 0.28, '#f0d9b2');
+      elp(ctx, w, h, 0.50, 0.56, 0.20, 0.24, '#ddc094', Math.PI, Math.PI * 2);
+      elp(ctx, w, h, 0.50, 0.56, 0.20, 0.24, '#edd4a6', Math.PI * 1.0, Math.PI * 1.55);
+      pline(ctx, w, h, [[0.50, 0.32], [0.50, 0.25]], '#c9ab7e', 0.009);
+      cir(ctx, w, h, 0.50, 0.24, 0.016, '#fbe9bf');
+      elp(ctx, w, h, 0.50, 0.84, 0.065, 0.16, '#6b4b3c', Math.PI, Math.PI * 2);
+      for (const ax of [0.33, 0.67]) elp(ctx, w, h, ax, 0.84, 0.035, 0.10, '#b1906a', Math.PI, Math.PI * 2);
+      speckle(ctx, w, h, 12, 'rgba(255,230,180,0.45)', 0, 1, 0.86, 1, 0.008, r);
+    },
+  },
+  {
+    id: 'pagoda', name: 'Tiered Pagoda',
+    tags: ['tiers', 'red', 'wood', 'stacked', 'eaves', 'man-made', 'quiet', 'symmetry'],
+    describe: 'A five-tiered wooden pagoda with upturned red eaves stepping inward as it rises, a spire on top.',
+    render(ctx, w, h) {
+      const r = lcg(341);
+      wash(ctx, w, h, '#d8e5e0', '#9fb9a6');
+      clouds(ctx, w, h, r, 0.08, 0.20, 3, 0.55);
+      box(ctx, w, h, 0, 0.88, 1, 0.12, '#5e6f52');
+      elp(ctx, w, h, 0.14, 0.78, 0.13, 0.10, 'rgba(60,92,60,0.75)');
+      elp(ctx, w, h, 0.88, 0.80, 0.12, 0.09, 'rgba(60,92,60,0.75)');
+      for (let i = 0; i < 5; i++) {
+        const t = i / 4;
+        const y = 0.84 - i * 0.15;
+        const halfBody = 0.17 - t * 0.075;
+        const halfEave = 0.26 - t * 0.115;
+        box(ctx, w, h, 0.5 - halfBody, y - 0.11, halfBody * 2, 0.11, '#c6552f');
+        box(ctx, w, h, 0.5 - halfBody * 0.6, y - 0.09, halfBody * 1.2, 0.055, '#5b2d1c');
+        ctx.fillStyle = '#8c2f22';
+        ctx.beginPath();
+        ctx.moveTo((0.5 - halfEave) * w, (y - 0.115) * h);
+        ctx.quadraticCurveTo(0.5 * w, (y - 0.195) * h, (0.5 + halfEave) * w, (y - 0.115) * h);
+        ctx.quadraticCurveTo(0.5 * w, (y - 0.145) * h, (0.5 - halfEave) * w, (y - 0.115) * h);
+        ctx.closePath(); ctx.fill();
+        pline(ctx, w, h, [[0.5 - halfEave, y - 0.115], [0.5 - halfEave - 0.015, y - 0.145]], '#8c2f22', 0.009);
+        pline(ctx, w, h, [[0.5 + halfEave, y - 0.115], [0.5 + halfEave + 0.015, y - 0.145]], '#8c2f22', 0.009);
+      }
+      pline(ctx, w, h, [[0.5, 0.12], [0.5, 0.03]], '#d8c070', 0.009);
+      for (let i = 0; i < 3; i++) elps(ctx, w, h, 0.5, 0.06 + i * 0.022, 0.022 - i * 0.005, 0.012, '#d8c070', 0.006);
+    },
+  },
+  {
+    id: 'stone-circle', name: 'Standing Stone Circle',
+    tags: ['stone', 'ring', 'ancient', 'grass', 'upright', 'rough', 'grey', 'open'],
+    describe: 'A ring of rough grey standing stones with lintels on open grassland at dawn, uprights in a circle.',
+    render(ctx, w, h) {
+      const r = lcg(351);
+      wash(ctx, w, h, '#f3c489', '#d8d6b0', '#7f9456');
+      cir(ctx, w, h, 0.22, 0.26, 0.05, '#fff4d2');
+      box(ctx, w, h, 0, 0.50, 1, 0.50, '#86a05a');
+      curve(ctx, w, h, [[0, 0.52], [0.4, 0.48], [0.7, 0.52], [1, 0.49]], '#6f8c4c', 0, 1);
+      const ring = [];
+      for (let i = 0; i < 11; i++) {
+        const a = Math.PI * 0.08 + (i / 11) * Math.PI * 1.84;
+        ring.push([0.5 + Math.cos(a) * 0.38, 0.70 + Math.sin(a) * 0.18]);
+      }
+      ring.sort((a, b) => a[1] - b[1]);
+      for (const [x, y] of ring) {
+        const sc = 0.7 + (y - 0.52) * 2.2;
+        const sh = 0.24 * sc, sw = 0.048 * sc;
+        elp(ctx, w, h, x + 0.02, y, sw * 1.6, sw * 0.5, 'rgba(50,62,34,0.4)');
+        ply(ctx, w, h, [[x - sw, y], [x + sw, y], [x + sw * 0.84, y - sh], [x - sw * 0.9, y - sh * 0.95]], '#9b9589');
+        ply(ctx, w, h, [[x + sw * 0.2, y], [x + sw, y], [x + sw * 0.84, y - sh], [x + sw * 0.1, y - sh * 0.97]], '#79736a');
+      }
+      speckle(ctx, w, h, 24, 'rgba(110,136,70,0.6)', 0, 1, 0.55, 1, 0.012, r);
+    },
+  },
+  {
+    id: 'sea-arch', name: 'Sea Arch',
+    tags: ['rock', 'natural arch', 'waves', 'salt', 'cliff', 'hole', 'spray', 'coast'],
+    describe: 'A natural rock arch standing in the surf off a coastline, waves breaking through the opening.',
+    render(ctx, w, h) {
+      const r = lcg(361);
+      wash(ctx, w, h, '#f6d49a', '#f0a97a', '#b78aa0');
+      water(ctx, w, h, 0.66, 1, '#3d6a86', '#1d3b52', 5, r);
+      ply(ctx, w, h, [[0, 0.46], [0.16, 0.40], [0.22, 0.70], [0, 0.72]], '#5c4a46');
+      ctx.fillStyle = '#6b564d';
+      ctx.beginPath();
+      ctx.moveTo(0.34 * w, 0.92 * h);
+      ctx.lineTo(0.36 * w, 0.44 * h);
+      ctx.lineTo(0.50 * w, 0.30 * h);
+      ctx.lineTo(0.72 * w, 0.38 * h);
+      ctx.lineTo(0.80 * w, 0.92 * h);
+      ctx.lineTo(0.68 * w, 0.92 * h);
+      ctx.lineTo(0.66 * w, 0.66 * h);
+      ctx.bezierCurveTo(0.62 * w, 0.52 * h, 0.50 * w, 0.52 * h, 0.47 * w, 0.66 * h);
+      ctx.lineTo(0.46 * w, 0.92 * h);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(40,30,28,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(0.66 * w, 0.66 * h);
+      ctx.bezierCurveTo(0.62 * w, 0.52 * h, 0.50 * w, 0.52 * h, 0.47 * w, 0.66 * h);
+      ctx.lineTo(0.50 * w, 0.66 * h);
+      ctx.bezierCurveTo(0.53 * w, 0.56 * h, 0.61 * w, 0.56 * h, 0.63 * w, 0.66 * h);
+      ctx.closePath(); ctx.fill();
+      elp(ctx, w, h, 0.40, 0.90, 0.13, 0.045, 'rgba(255,255,255,0.75)');
+      elp(ctx, w, h, 0.74, 0.86, 0.10, 0.035, 'rgba(255,255,255,0.6)');
+      speckle(ctx, w, h, 20, 'rgba(255,255,255,0.6)', 0.3, 0.85, 0.78, 0.95, 0.011, r);
+    },
+  },
+  {
+    id: 'salt-flat', name: 'Cracked Salt Flat',
+    tags: ['white', 'flat', 'cracked', 'dry', 'vast', 'mirror', 'empty', 'hexagons'],
+    describe: 'An endless cracked white salt flat, polygon crust underfoot, distant purple mountains on the horizon.',
+    render(ctx, w, h) {
+      const r = lcg(371);
+      wash(ctx, w, h, '#6fa3d8', '#dce9f2');
+      clouds(ctx, w, h, r, 0.10, 0.26, 3, 0.55);
+      ply(ctx, w, h, [[0, 0.46], [0.18, 0.36], [0.34, 0.44], [0.52, 0.34], [0.72, 0.42], [0.88, 0.35], [1, 0.44], [1, 0.50], [0, 0.50]], '#8b7aa8');
+      box(ctx, w, h, 0, 0.50, 1, 0.50, '#f4f3ef');
+      ctx.fillStyle = lg(ctx, 0, 0.50 * h, 0, h, [[0, '#e6ecef'], [0.2, '#fbfbf8'], [1, '#dedbd2']]);
+      ctx.fillRect(0, 0.50 * h, w, 0.50 * h);
+      ctx.strokeStyle = 'rgba(150,146,134,0.8)';
+      for (let row = 0; row < 7; row++) {
+        const y = 0.52 + row * row * 0.011 + row * 0.03;
+        const step = 0.07 + row * 0.035;
+        for (let x = -0.1; x < 1.1; x += step) {
+          ctx.lineWidth = Math.max(0.7, (0.002 + row * 0.0008) * S(w, h));
+          ctx.beginPath();
+          ctx.moveTo((x + (row % 2) * step * 0.5) * w, y * h);
+          ctx.lineTo((x + (row % 2) * step * 0.5 + step * 0.5) * w, (y + 0.035 + row * 0.012) * h);
+          ctx.lineTo((x + (row % 2) * step * 0.5 + step) * w, y * h);
+          ctx.stroke();
+        }
+        ctx.lineWidth = Math.max(0.7, 0.002 * S(w, h));
+        ctx.beginPath(); ctx.moveTo(0, y * h); ctx.lineTo(w, y * h); ctx.stroke();
+      }
+      pline(ctx, w, h, [[0, 0.50], [1, 0.50]], 'rgba(255,255,255,0.9)', 0.005);
+    },
+  },
+  {
+    id: 'geyser', name: 'Erupting Geyser',
+    tags: ['water', 'vertical jet', 'steam', 'hot', 'sulphur', 'sudden', 'white', 'noise'],
+    describe: 'A geyser erupting: a narrow column of boiling water shooting straight up out of pale mineral ground, steam everywhere.',
+    render(ctx, w, h) {
+      const r = lcg(381);
+      wash(ctx, w, h, '#2f6fa8', '#9ec7e2');
+      for (let i = 0; i < 14; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${(0.07 + r() * 0.1).toFixed(2)})`;
+        ctx.beginPath();
+        ctx.ellipse((0.3 + r() * 0.42) * w, (0.04 + r() * 0.34) * h, 0.16 * w, 0.10 * h, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      box(ctx, w, h, 0, 0.78, 1, 0.22, '#cdc4ad');
+      curve(ctx, w, h, [[0, 0.82], [0.3, 0.78], [0.7, 0.81], [1, 0.78]], '#e3dcc6', 0, 1);
+      elp(ctx, w, h, 0.5, 0.82, 0.16, 0.045, '#9d9480');
+      elp(ctx, w, h, 0.5, 0.82, 0.10, 0.028, '#5d7f86');
+      ply(ctx, w, h, [[0.455, 0.82], [0.545, 0.82], [0.57, 0.30], [0.50, 0.08], [0.43, 0.30]], 'rgba(255,255,255,0.92)');
+      ply(ctx, w, h, [[0.478, 0.82], [0.522, 0.82], [0.535, 0.34], [0.50, 0.16], [0.465, 0.34]], '#ffffff');
+      for (let i = 0; i < 10; i++) {
+        const y = 0.16 + r() * 0.5;
+        elp(ctx, w, h, 0.5 + (r() - 0.5) * 0.26, y, 0.06 + r() * 0.05, 0.035, 'rgba(255,255,255,0.42)');
+      }
+      speckle(ctx, w, h, 22, 'rgba(255,255,255,0.7)', 0.32, 0.68, 0.6, 0.84, 0.01, r);
+    },
+  },
+  {
+    id: 'runway', name: 'Airport Runway',
+    tags: ['tarmac', 'straight lines', 'lights', 'flat', 'man-made', 'dusk', 'markings', 'noise'],
+    describe: 'An airport runway at dusk: black tarmac with white centre dashes converging, rows of edge lights, a jet on approach.',
+    render(ctx, w, h) {
+      const r = lcg(391);
+      wash(ctx, w, h, '#2a3a60', '#c47a58', '#e9a46c');
+      box(ctx, w, h, 0, 0.52, 1, 0.48, '#3c3f46');
+      ply(ctx, w, h, [[0.44, 0.52], [0.56, 0.52], [1.1, 1], [-0.1, 1]], '#23262b');
+      for (let i = 0; i < 7; i++) {
+        const t = i / 7, y = 0.54 + t * t * 0.46, hh = 0.012 + t * 0.045, ww = 0.012 + t * 0.03;
+        box(ctx, w, h, 0.5 - ww / 2, y, ww, hh, '#f3f1e6');
+      }
+      for (let i = 0; i < 8; i++) {
+        const t = i / 8, y = 0.54 + t * t * 0.44, sp = 0.07 + t * t * 0.52;
+        cir(ctx, w, h, 0.5 - sp, y, 0.009 + t * 0.006, '#ffd36a');
+        cir(ctx, w, h, 0.5 + sp, y, 0.009 + t * 0.006, '#ffd36a');
+      }
+      box(ctx, w, h, 0, 0.50, 1, 0.025, '#4a4e57');
+      ply(ctx, w, h, [[0.56, 0.26], [0.78, 0.30], [0.82, 0.325], [0.60, 0.325]], '#e8eaee');
+      ply(ctx, w, h, [[0.64, 0.30], [0.70, 0.22], [0.73, 0.22], [0.70, 0.30]], '#c9ced6');
+      ply(ctx, w, h, [[0.66, 0.325], [0.72, 0.39], [0.75, 0.39], [0.72, 0.325]], '#c9ced6');
+      cir(ctx, w, h, 0.57, 0.295, 0.009, '#fff0b0');
+      speckle(ctx, w, h, 10, 'rgba(255,220,150,0.6)', 0, 1, 0.46, 0.52, 0.006, r);
+    },
+  },
+  {
+    id: 'subway-tunnel', name: 'Subway Tunnel',
+    tags: ['tube', 'underground', 'dark', 'rails', 'rings', 'enclosed', 'metal', 'rumble'],
+    describe: 'A round subway tunnel receding into darkness, concrete rings, two steel rails, a far-off light.',
+    render(ctx, w, h) {
+      wash(ctx, w, h, '#191622', '#0d0b12');
+      for (let i = 7; i >= 0; i--) {
+        const t = i / 7;
+        const rx = 0.06 + t * 0.56, ry = rx * (w / h) * 0.9;
+        const shade = Math.round(26 + (1 - t) * 10 + t * 56);
+        elp(ctx, w, h, 0.5, 0.46, rx, ry, `rgb(${shade},${shade - 4},${shade + 8})`);
+        elps(ctx, w, h, 0.5, 0.46, rx, ry, 'rgba(10,8,14,0.85)', 0.008);
+      }
+      elp(ctx, w, h, 0.5, 0.46, 0.05, 0.05 * (w / h) * 0.9, '#fff0bb');
+      cir(ctx, w, h, 0.5, 0.46, 0.028, '#ffffff');
+      ply(ctx, w, h, [[0.5, 0.46], [1.0, 1.0], [0, 1.0]], '#23202c');
+      for (const off of [-1, 1]) {
+        pline(ctx, w, h, [[0.5 + off * 0.012, 0.47], [0.5 + off * 0.40, 1]], '#b9c0ca', 0.009);
+      }
+      for (let i = 0; i < 8; i++) {
+        const t = i / 8, y = 0.50 + t * t * 0.50, sp = 0.03 + t * t * 0.46;
+        pline(ctx, w, h, [[0.5 - sp, y], [0.5 + sp, y]], 'rgba(62,52,42,0.9)', 0.006 + t * 0.006);
+      }
+      for (let i = 0; i < 5; i++) {
+        cir(ctx, w, h, 0.5 - (0.08 + i * 0.1), 0.40 - i * 0.012, 0.008, 'rgba(255,214,140,0.8)');
+      }
+    },
+  },
+  {
+    id: 'wind-farm', name: 'Wind Farm',
+    tags: ['turbines', 'white', 'rotating', 'green hills', 'tall', 'man-made', 'wind', 'repeating'],
+    describe: 'Rows of tall white wind turbines on green rolling hills, three slender blades each, turning steadily.',
+    render(ctx, w, h) {
+      const r = lcg(401);
+      wash(ctx, w, h, '#63a8dd', '#d4e9f5');
+      clouds(ctx, w, h, r, 0.08, 0.22, 3, 0.55);
+      curve(ctx, w, h, [[0, 0.70], [0.3, 0.60], [0.6, 0.68], [1, 0.58]], '#79a94e', 0, 1);
+      curve(ctx, w, h, [[0, 0.86], [0.35, 0.76], [0.7, 0.88], [1, 0.78]], '#5c8d3c', 0, 1);
+      const turbines = [[0.18, 0.66, 1.0], [0.46, 0.62, 0.84], [0.74, 0.67, 0.92], [0.90, 0.60, 0.62]];
+      for (const [x, baseY, sc] of turbines) {
+        const top = baseY - 0.42 * sc;
+        ply(ctx, w, h, [[x - 0.011 * sc, baseY], [x + 0.011 * sc, baseY], [x + 0.006 * sc, top], [x - 0.006 * sc, top]], '#f4f7f9');
+        const rad = 0.17 * sc;
+        for (let b = 0; b < 3; b++) {
+          const a = (b / 3) * Math.PI * 2 + 0.5;
+          pline(ctx, w, h, [[x, top], [x + Math.cos(a) * rad, top + Math.sin(a) * rad * (w / h)]], '#fbfdfe', 0.013 * sc);
+        }
+        cir(ctx, w, h, x, top, 0.014 * sc, '#cfd8de');
+      }
+    },
+  },
+  {
+    id: 'shipwreck', name: 'Sunken Shipwreck',
+    tags: ['underwater', 'rusted', 'tilted', 'dark', 'wreck', 'silt', 'cold', 'broken'],
+    describe: 'A broken ship lying tilted on a dark seabed, hull rusted and split, silt clouding the cold water.',
+    render(ctx, w, h) {
+      const r = lcg(411);
+      wash(ctx, w, h, '#0d3a44', '#04161d');
+      ply(ctx, w, h, [[0.2, 0], [0.33, 0], [0.5, 1], [0.3, 1]], 'rgba(130,210,220,0.07)');
+      box(ctx, w, h, 0, 0.84, 1, 0.16, '#30362e');
+      curve(ctx, w, h, [[0, 0.88], [0.3, 0.84], [0.7, 0.88], [1, 0.84]], '#3b4136', 0, 1);
+      ctx.save();
+      ctx.translate(0.5 * w, 0.70 * h);
+      ctx.rotate(-0.22);
+      ctx.translate(-0.5 * w, -0.70 * h);
+      ply(ctx, w, h, [[0.16, 0.66], [0.78, 0.63], [0.84, 0.74], [0.24, 0.80]], '#5c4034');
+      ply(ctx, w, h, [[0.16, 0.66], [0.78, 0.63], [0.76, 0.675], [0.18, 0.705]], '#7c5542');
+      ply(ctx, w, h, [[0.52, 0.63], [0.54, 0.63], [0.58, 0.30], [0.55, 0.30]], '#4b3a30');
+      pline(ctx, w, h, [[0.56, 0.34], [0.30, 0.46]], '#4b3a30', 0.006);
+      pline(ctx, w, h, [[0.56, 0.34], [0.76, 0.50]], '#4b3a30', 0.006);
+      box(ctx, w, h, 0.34, 0.56, 0.16, 0.08, '#6a4a3a');
+      for (let i = 0; i < 5; i++) cir(ctx, w, h, 0.26 + i * 0.09, 0.70, 0.013, '#2a1e18');
+      ctx.restore();
+      for (let i = 0; i < 10; i++) {
+        cir(ctx, w, h, 0.62 + (r() - 0.5) * 0.14, 0.14 + r() * 0.42, 0.008 + r() * 0.01, 'rgba(190,235,240,0.35)');
+      }
+      speckle(ctx, w, h, 28, 'rgba(180,215,220,0.18)', 0, 1, 0, 1, 0.009, r);
+    },
+  },
+  {
+    id: 'observatory', name: 'Mountaintop Observatory',
+    tags: ['dome', 'white', 'stars', 'high', 'cold', 'slit', 'man-made', 'quiet'],
+    describe: 'A white domed observatory on a bare mountaintop under a sky thick with stars, its shutter slit standing open.',
+    render(ctx, w, h) {
+      const r = lcg(421);
+      wash(ctx, w, h, '#050818', '#0e1830');
+      starfield(ctx, w, h, 110, 0.74, r);
+      // a soft band of denser stars rather than a hard diagonal streak
+      ctx.save();
+      ctx.translate(0.5 * w, 0.28 * h);
+      ctx.rotate(0.22);
+      ctx.fillStyle = 'rgba(150,172,230,0.10)';
+      ctx.beginPath(); ctx.ellipse(0, 0, 0.62 * w, 0.09 * h, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      for (let i = 0; i < 70; i++) {
+        const t = r();
+        const x = t * w, y = (0.16 + t * 0.26 + (r() - 0.5) * 0.12) * h;
+        ctx.fillStyle = `rgba(226,234,255,${(0.3 + r() * 0.6).toFixed(2)})`;
+        ctx.beginPath(); ctx.arc(x, y, 0.0035 * S(w, h) * (0.6 + r()), 0, Math.PI * 2); ctx.fill();
+      }
+      ply(ctx, w, h, [[0, 1], [0.24, 0.72], [0.5, 0.78], [0.78, 0.70], [1, 1]], '#0f1320');
+      box(ctx, w, h, 0.37, 0.66, 0.26, 0.14, '#cfd6df');
+      box(ctx, w, h, 0.37, 0.64, 0.26, 0.03, '#eef2f6');
+      elp(ctx, w, h, 0.50, 0.65, 0.17, 0.19, '#e6ecf2', Math.PI, Math.PI * 2);
+      elp(ctx, w, h, 0.50, 0.65, 0.17, 0.19, '#aeb9c5', Math.PI * 1.5, Math.PI * 2);
+      ply(ctx, w, h, [[0.478, 0.655], [0.522, 0.655], [0.515, 0.47], [0.485, 0.47]], '#0c0f1a');
+      pline(ctx, w, h, [[0.50, 0.60], [0.66, 0.40]], 'rgba(220,235,255,0.35)', 0.012);
+      for (const [x, y] of [[0.30, 0.86], [0.70, 0.88]]) cir(ctx, w, h, x, y, 0.011, '#ffcf6a');
+      box(ctx, w, h, 0, 0.97, 1, 0.03, '#070a12');
+    },
+  },
+  {
+    id: 'bazaar', name: 'Covered Bazaar',
+    tags: ['market', 'crowded', 'striped awnings', 'warm', 'spices', 'narrow', 'colour', 'noise'],
+    describe: 'A narrow covered bazaar lane: striped awnings overhead, hanging lamps, stalls of colour, spice smell, crowds.',
+    render(ctx, w, h) {
+      const r = lcg(431);
+      wash(ctx, w, h, '#8a5a30', '#c58b4a');
+      box(ctx, w, h, 0, 0.78, 1, 0.22, '#6d4a2c');
+      for (let i = 0; i < 6; i++) {
+        const stripes = ['#d9443c', '#f0ead6', '#2e7fa8', '#f0ead6', '#e8a33d', '#f0ead6'];
+        const x = i * 0.175 - 0.01;
+        for (let s = 0; s < 6; s++) {
+          ply(ctx, w, h, [
+            [x + s * 0.028, 0.06], [x + (s + 1) * 0.028, 0.06],
+            [x + (s + 1) * 0.028 + 0.012, 0.28], [x + s * 0.028 + 0.012, 0.28],
+          ], stripes[(s + i) % 6]);
+        }
+      }
+      box(ctx, w, h, 0, 0.26, 1, 0.035, '#5b3a22');
+      for (let i = 0; i < 5; i++) {
+        const x = 0.10 + i * 0.2;
+        pline(ctx, w, h, [[x, 0.29], [x, 0.38]], '#4a2f1b', 0.005);
+        ply(ctx, w, h, [[x - 0.028, 0.40], [x + 0.028, 0.40], [x + 0.018, 0.48], [x - 0.018, 0.48]], '#ffcf5e');
+        cir(ctx, w, h, x, 0.44, 0.022, 'rgba(255,224,140,0.45)');
+      }
+      const stalls = ['#c0392b', '#2e8b57', '#e8a33d', '#8e44ad', '#2e7fa8'];
+      for (let i = 0; i < 5; i++) {
+        const x = 0.04 + i * 0.2;
+        box(ctx, w, h, x, 0.60, 0.15, 0.20, '#7a5230');
+        box(ctx, w, h, x, 0.58, 0.15, 0.035, stalls[i]);
+        for (let b = 0; b < 3; b++) cir(ctx, w, h, x + 0.032 + b * 0.042, 0.56, 0.019, stalls[(i + b + 1) % 5]);
+      }
+      for (let i = 0; i < 7; i++) {
+        const x = 0.06 + i * 0.14;
+        ply(ctx, w, h, [[x - 0.028, 1], [x + 0.028, 1], [x + 0.020, 0.80], [x - 0.020, 0.80]], '#2b1c10');
+        cir(ctx, w, h, x, 0.785, 0.022, '#3b2616');
+      }
+      speckle(ctx, w, h, 10, 'rgba(255,210,130,0.3)', 0, 1, 0.3, 0.6, 0.016, r);
+    },
+  },
+  {
+    id: 'zen-garden', name: 'Raked Zen Garden',
+    tags: ['gravel', 'raked lines', 'rocks', 'still', 'quiet', 'beige', 'concentric', 'minimal'],
+    describe: 'A raked gravel zen garden: pale gravel combed into concentric lines around three mossy standing rocks.',
+    render(ctx, w, h) {
+      const r = lcg(441);
+      wash(ctx, w, h, '#ded3bb', '#cdbf9f');
+      box(ctx, w, h, 0, 0, 1, 0.1, '#6e5a42');
+      const rocks = [[0.30, 0.52, 0.11], [0.62, 0.40, 0.075], [0.72, 0.70, 0.095]];
+      ctx.strokeStyle = 'rgba(176,162,132,0.95)';
+      for (const [rx, ry, rr] of rocks) {
+        for (let k = 1; k <= 6; k++) {
+          ctx.lineWidth = Math.max(0.8, 0.0045 * S(w, h));
+          ctx.beginPath();
+          ctx.ellipse(rx * w, ry * h, (rr + k * 0.035) * w, (rr + k * 0.035) * w * 0.92, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      for (let i = 0; i < 9; i++) {
+        pline(ctx, w, h, [[0.02, 0.14 + i * 0.1], [0.14, 0.14 + i * 0.1]], 'rgba(176,162,132,0.95)', 0.0045);
+      }
+      for (const [rx, ry, rr] of rocks) {
+        elp(ctx, w, h, rx, ry + rr * 0.5, rr * 1.2, rr * 0.4, 'rgba(120,108,86,0.35)');
+        ply(ctx, w, h, [
+          [rx - rr, ry + rr * 0.5], [rx - rr * 0.8, ry - rr * 0.5], [rx - rr * 0.1, ry - rr * 1.05],
+          [rx + rr * 0.8, ry - rr * 0.4], [rx + rr, ry + rr * 0.5],
+        ], '#6d6a62');
+        ply(ctx, w, h, [
+          [rx - rr * 0.1, ry - rr * 1.05], [rx + rr * 0.8, ry - rr * 0.4],
+          [rx + rr, ry + rr * 0.5], [rx + rr * 0.2, ry + rr * 0.5],
+        ], '#54524c');
+        elp(ctx, w, h, rx - rr * 0.3, ry - rr * 0.55, rr * 0.4, rr * 0.22, '#6f8c4a');
+      }
+      speckle(ctx, w, h, 60, 'rgba(255,255,255,0.22)', 0, 1, 0.12, 1, 0.005, r);
+    },
+  },
+  {
+    id: 'lunar-surface', name: 'Lunar Surface',
+    tags: ['grey', 'craters', 'airless', 'black sky', 'dust', 'silent', 'earthrise', 'sterile'],
+    describe: 'The cratered grey surface of the Moon: fine dust, hard shadows, black airless sky, Earth hanging above the horizon.',
+    render(ctx, w, h) {
+      const r = lcg(451);
+      ctx.fillStyle = '#04040a';
+      ctx.fillRect(0, 0, w, h);
+      starfield(ctx, w, h, 70, 0.6, r);
+      cir(ctx, w, h, 0.74, 0.22, 0.085, '#2f6fc0');
+      ctx.save();
+      ctx.beginPath(); ctx.arc(0.74 * w, 0.22 * h, 0.085 * S(w, h), 0, Math.PI * 2); ctx.clip();
+      elp(ctx, w, h, 0.70, 0.19, 0.045, 0.035, '#4f9e5c');
+      elp(ctx, w, h, 0.79, 0.26, 0.035, 0.025, '#59a868');
+      elp(ctx, w, h, 0.72, 0.27, 0.05, 0.02, 'rgba(255,255,255,0.65)');
+      elp(ctx, w, h, 0.78, 0.17, 0.04, 0.018, 'rgba(255,255,255,0.55)');
+      ctx.restore();
+      cir(ctx, w, h, 0.74, 0.22, 0.09, 'rgba(120,180,255,0.12)');
+      ply(ctx, w, h, [[0, 0.56], [0.3, 0.52], [0.62, 0.56], [1, 0.52], [1, 1], [0, 1]], '#8d8a86');
+      ctx.fillStyle = lg(ctx, 0, 0.52 * h, 0, h, [[0, '#a9a6a1'], [1, '#6c6a67']]);
+      ctx.fillRect(0, 0.56 * h, w, 0.44 * h);
+      ply(ctx, w, h, [[0, 0.56], [0.3, 0.52], [0.62, 0.56], [1, 0.52], [1, 0.58], [0, 0.60]], '#9b9893');
+      const craters = [[0.22, 0.74, 0.12], [0.56, 0.68, 0.075], [0.80, 0.84, 0.10], [0.40, 0.90, 0.09], [0.66, 0.94, 0.06], [0.08, 0.62, 0.05]];
+      for (const [x, y, rr] of craters) {
+        elp(ctx, w, h, x, y, rr, rr * 0.42, '#605e5b');
+        elp(ctx, w, h, x, y - rr * 0.06, rr * 0.86, rr * 0.33, '#8b8884');
+        elps(ctx, w, h, x, y, rr, rr * 0.42, 'rgba(210,207,202,0.55)', 0.005);
+      }
+      speckle(ctx, w, h, 40, 'rgba(60,58,56,0.5)', 0, 1, 0.58, 1, 0.006, r);
+    },
+  },
+  {
+    id: 'hedge-maze', name: 'Hedge Maze',
+    tags: ['green', 'grid', 'walls', 'puzzle', 'aerial', 'formal', 'enclosed', 'right angles'],
+    describe: 'A formal hedge maze seen from above: dark clipped green walls in right-angled corridors around a centre.',
+    render(ctx, w, h) {
+      const r = lcg(461);
+      wash(ctx, w, h, '#9fc06a', '#86a954');
+      box(ctx, w, h, 0.03, 0.03, 0.94, 0.94, '#b4cf84');
+      const N = 7;
+      const cell = 0.94 / N;
+      ctx.strokeStyle = '#22511f';
+      ctx.lineCap = 'square';
+      ctx.lineWidth = Math.max(2, 0.028 * S(w, h));
+      const seg = (x0, y0, x1, y1) => {
+        ctx.beginPath();
+        ctx.moveTo((0.03 + x0 * cell) * w, (0.03 + y0 * cell) * h);
+        ctx.lineTo((0.03 + x1 * cell) * w, (0.03 + y1 * cell) * h);
+        ctx.stroke();
+      };
+      seg(0, 0, N, 0); seg(0, N, N, N); seg(0, 0, 0, N); seg(N, 0, N, N);
+      for (let i = 0; i < 26; i++) {
+        const x = Math.floor(r() * N), y = Math.floor(r() * N);
+        if (r() < 0.5) seg(x, y, Math.min(N, x + 1 + Math.floor(r() * 2)), y);
+        else seg(x, y, x, Math.min(N, y + 1 + Math.floor(r() * 2)));
+      }
+      seg(2, 2, 5, 2); seg(5, 2, 5, 5); seg(5, 5, 2, 5); seg(2, 5, 2, 3.2);
+      box(ctx, w, h, 0.42, 0.42, 0.16, 0.16, '#d9cf9e');
+      cir(ctx, w, h, 0.50, 0.50, 0.035, '#5fa0c8');
+      speckle(ctx, w, h, 20, 'rgba(34,81,31,0.2)', 0.05, 0.95, 0.05, 0.95, 0.008, r);
+    },
+  },
+  {
+    id: 'clock-tower', name: 'Clock Tower',
+    tags: ['tower', 'clock face', 'brick', 'tall', 'man-made', 'bells', 'hands', 'vertical'],
+    describe: 'A tall brick clock tower with a big pale clock face and black hands, a spire above, bells inside.',
+    render(ctx, w, h) {
+      const r = lcg(471);
+      wash(ctx, w, h, '#5e7fa8', '#c3d3e0');
+      clouds(ctx, w, h, r, 0.06, 0.18, 2, 0.5);
+      elp(ctx, w, h, 0.18, 0.24, 0.14, 0.05, 'rgba(255,255,255,0.7)');
+      box(ctx, w, h, 0, 0.90, 1, 0.10, '#4e5a4a');
+      box(ctx, w, h, 0.36, 0.26, 0.28, 0.64, '#9e5a46');
+      box(ctx, w, h, 0.36, 0.26, 0.09, 0.64, '#b46a52');
+      ctx.strokeStyle = 'rgba(80,42,32,0.35)';
+      for (let i = 0; i < 13; i++) {
+        ctx.lineWidth = Math.max(0.7, 0.0035 * S(w, h));
+        ctx.beginPath(); ctx.moveTo(0.36 * w, (0.30 + i * 0.05) * h); ctx.lineTo(0.64 * w, (0.30 + i * 0.05) * h); ctx.stroke();
+      }
+      box(ctx, w, h, 0.33, 0.235, 0.34, 0.035, '#7d4434');
+      box(ctx, w, h, 0.345, 0.195, 0.31, 0.04, '#8c4c3a');
+      ply(ctx, w, h, [[0.345, 0.195], [0.655, 0.195], [0.50, 0.04]], '#3f4e5c');
+      cir(ctx, w, h, 0.50, 0.035, 0.014, '#e8c35e');
+      cir(ctx, w, h, 0.50, 0.44, 0.115, '#2d2a28');
+      cir(ctx, w, h, 0.50, 0.44, 0.10, '#f3ead3');
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        pline(ctx, w, h, [
+          [0.50 + Math.cos(a) * 0.082, 0.44 + Math.sin(a) * 0.082 * (w / h)],
+          [0.50 + Math.cos(a) * 0.095, 0.44 + Math.sin(a) * 0.095 * (w / h)],
+        ], '#3b3630', 0.006);
+      }
+      pline(ctx, w, h, [[0.50, 0.44], [0.50 + 0.05, 0.44 - 0.035]], '#2b2824', 0.011);
+      pline(ctx, w, h, [[0.50, 0.44], [0.50 - 0.02, 0.44 + 0.085]], '#2b2824', 0.009);
+      cir(ctx, w, h, 0.50, 0.44, 0.012, '#2b2824');
+      box(ctx, w, h, 0.455, 0.72, 0.09, 0.18, '#5c3426');
+      elp(ctx, w, h, 0.50, 0.72, 0.045, 0.045, '#5c3426', Math.PI, Math.PI * 2);
+    },
+  },
+  {
+    id: 'oasis', name: 'Desert Oasis',
+    tags: ['palms', 'water', 'green', 'sand', 'hot', 'shade', 'small', 'relief'],
+    describe: 'A small blue pool ringed by palm trees in the middle of hot open desert — sudden green in all that sand.',
+    render(ctx, w, h) {
+      const r = lcg(481);
+      wash(ctx, w, h, '#64aede', '#e8d8ae');
+      curve(ctx, w, h, [[0, 0.52], [0.3, 0.46], [0.65, 0.52], [1, 0.47]], '#e2b878', 0, 1);
+      curve(ctx, w, h, [[0, 0.70], [0.4, 0.62], [0.8, 0.72], [1, 0.66]], '#efcf96', 0, 1);
+      box(ctx, w, h, 0, 0.84, 1, 0.16, '#dcb272');
+      elp(ctx, w, h, 0.52, 0.80, 0.26, 0.085, '#8e7b4e');
+      elp(ctx, w, h, 0.52, 0.79, 0.23, 0.07, '#2d8fae');
+      elp(ctx, w, h, 0.48, 0.775, 0.12, 0.03, 'rgba(180,235,245,0.55)');
+      const palms = [[0.26, 0.74, 1.0], [0.38, 0.70, 0.8], [0.70, 0.72, 0.95], [0.80, 0.69, 0.7]];
+      for (const [x, baseY, sc] of palms) {
+        const top = baseY - 0.34 * sc;
+        ctx.strokeStyle = '#6a4a2c';
+        ctx.lineWidth = Math.max(1, 0.015 * sc * S(w, h));
+        ctx.beginPath();
+        ctx.moveTo(x * w, baseY * h);
+        ctx.quadraticCurveTo((x - 0.03 * sc) * w, (baseY - 0.18 * sc) * h, ((x - 0.01 * sc)) * w, top * h);
+        ctx.stroke();
+        for (let f = 0; f < 6; f++) {
+          const a = Math.PI + (f / 5) * Math.PI;
+          const ex = x - 0.01 * sc + Math.cos(a) * 0.14 * sc;
+          const ey = top + Math.sin(a) * 0.09 * sc + 0.03 * sc;
+          ctx.strokeStyle = '#2f7a3e';
+          ctx.lineWidth = Math.max(1, 0.013 * sc * S(w, h));
+          ctx.beginPath();
+          ctx.moveTo((x - 0.01 * sc) * w, top * h);
+          ctx.quadraticCurveTo(((x - 0.01 * sc + ex) / 2) * w, (top - 0.06 * sc) * h, ex * w, ey * h);
+          ctx.stroke();
+        }
+      }
+      speckle(ctx, w, h, 18, 'rgba(160,112,58,0.25)', 0, 1, 0.86, 1, 0.008, r);
+    },
+  },
+];
+
+/* ------------------------------------------------------------------ *
+ * Selection. This is the part the statistics depend on.
+ * ------------------------------------------------------------------ */
+
+/** How many candidates a ranking trial shows, and the resulting chance rate. */
+export const CANDIDATES = 5;
+export const CHANCE = 1 / CANDIDATES;
+
+export const byId = (id) => TARGETS.find((t) => t.id === id) || null;
+
+/**
+ * Draw one trial's worth of targets.
+ *
+ * - The TRUE target is uniform over the whole pool (randomInt, crypto-backed).
+ * - The DECOYS are drawn uniformly WITHOUT REPLACEMENT from the pool minus the
+ *   true target, so a decoy can never be the true target and no target can
+ *   appear twice in the grid.
+ * - The DISPLAY ORDER is shuffled independently of which member is the true
+ *   target, so position in the grid carries no information. (Fisher-Yates from
+ *   core/rng.js, which is unbiased.)
+ *
+ * With `count` candidates the probability of ranking the true target first by
+ * guessing alone is exactly 1/count — 20% at the default of 5. Nothing in here
+ * looks at the viewer's history: there is no adaptive difficulty anywhere.
+ *
+ * Math.random is not used. Not here, not anywhere that touches a scored draw.
+ */
+export function chooseTargetSet(pool = TARGETS, count = CANDIDATES) {
+  if (!Array.isArray(pool) || pool.length < count) {
+    throw new Error(`chooseTargetSet: pool needs at least ${count} targets`);
+  }
+  const target = pool[randomInt(pool.length)];
+  const rest = pool.filter((t) => t.id !== target.id);
+  const decoys = sample(rest, count - 1);
+  const order = shuffle([target, ...decoys]);
+  return { target, decoys, order };
+}
+
+/* ------------------------------------------------------------------ *
+ * Painting
+ * ------------------------------------------------------------------ */
+
+/**
+ * Paint a target into a canvas element, sizing its backing store for the
+ * device pixel ratio. Safe to call repeatedly; renders are deterministic so
+ * the result is identical every time.
+ */
+export function paintTarget(canvas, target, dpr) {
+  const ratio = Math.min(dpr || globalThis.devicePixelRatio || 1, 2.5);
+  const cssW = canvas.clientWidth || canvas.width || 240;
+  const cssH = canvas.clientHeight || canvas.height || 170;
+  const pw = Math.max(1, Math.round(cssW * ratio));
+  const ph = Math.max(1, Math.round(cssH * ratio));
+  if (canvas.width !== pw) canvas.width = pw;
+  if (canvas.height !== ph) canvas.height = ph;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, pw, ph);
+  ctx.save();
+  target.render(ctx, pw, ph);
+  ctx.restore();
+  return canvas;
+}
+
+/** Sanity check used by the test script: no duplicate ids, enough targets. */
+export function poolIntegrity(pool = TARGETS) {
+  const ids = pool.map((t) => t.id);
+  const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+  const missing = pool.filter((t) => !t.name || !t.describe || typeof t.render !== 'function' || !t.tags?.length);
+  return { size: pool.length, dupes, malformed: missing.map((t) => t.id) };
+}

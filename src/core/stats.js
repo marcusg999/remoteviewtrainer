@@ -107,6 +107,27 @@ export function normalSf(z) {
 }
 
 /**
+ * Upper tail of the chi-square distribution, P(X > x).
+ * Even df has a closed form; odd df adds the normal-tail term. The call-bias
+ * test uses df = 4, but both branches are here so the function is honest.
+ */
+export function chi2Sf(x, df) {
+  if (x <= 0) return 1;
+  const h = x / 2;
+  if (df % 2 === 0) {
+    // P(X > x) = exp(-x/2) * sum_{i=0}^{df/2-1} (x/2)^i / i!
+    let term = 1, sum = 1;
+    for (let i = 1; i < df / 2; i++) { term *= h / i; sum += term; }
+    return Math.min(1, Math.exp(-h) * sum);
+  }
+  // odd df: start from the normal tail and add the series
+  let sum = erfc(Math.sqrt(h));
+  let term = Math.sqrt(2 * x / Math.PI) * Math.exp(-h);
+  for (let i = 3; i <= df; i += 2) { sum += term; term *= x / i; }
+  return Math.min(1, Math.max(0, sum));
+}
+
+/**
  * Standard one-proportion z-score: z = (hits - np) / sqrt(np(1-p)).
  * Uncorrected, as is conventional in the parapsychology literature.
  */

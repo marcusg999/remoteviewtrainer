@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   lnChoose, binomPmf, binomTailGE, binomTailLE, normalSf, erfc,
-  zScore, wilsonInterval, effectSize, summarize, verdict,
+  zScore, wilsonInterval, effectSize, summarize, verdict, chi2Sf,
 } from '../src/core/stats.js';
 
 const close = (a, b, tol = 1e-9) => expect(Math.abs(a - b)).toBeLessThan(tol);
@@ -170,5 +170,29 @@ describe('summarize', () => {
   it('the significance thresholds are the conventional ones', () => {
     // 25 of 25 is as extreme as this test can get; it must read highly significant
     expect(verdict(summarize(25, 25, 0.2)).tone).toBe('strong');
+  });
+});
+
+describe('chi-square tail', () => {
+  it('matches published critical values for df = 4 (the call-bias test)', () => {
+    close(chi2Sf(9.487729, 4), 0.05, 1e-6);
+    close(chi2Sf(13.276704, 4), 0.01, 1e-6);
+    close(chi2Sf(18.466827, 4), 0.001, 1e-6);
+  });
+  it('matches published critical values for odd df', () => {
+    close(chi2Sf(3.841459, 1), 0.05, 1e-6);
+    close(chi2Sf(7.814728, 3), 0.05, 1e-6);
+    close(chi2Sf(11.070498, 5), 0.05, 1e-6);
+  });
+  it('is 1 at zero and decreasing', () => {
+    expect(chi2Sf(0, 4)).toBe(1);
+    expect(chi2Sf(-1, 4)).toBe(1);
+    let prev = 1;
+    for (const x of [1, 2, 5, 10, 20, 40]) {
+      const v = chi2Sf(x, 4);
+      expect(v).toBeLessThan(prev);
+      expect(v).toBeGreaterThanOrEqual(0);
+      prev = v;
+    }
   });
 });

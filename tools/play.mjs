@@ -63,18 +63,24 @@ const run = async () => {
   await page.waitForTimeout(1600);
   await shot('dealt');
 
-  // Play all 25 trials, screenshotting the first reveal and a mid-run state
-  const frameTimes = [];
+  // Play all 25 trials. Wait on the game's own readiness rather than fixed
+  // sleeps: under software GL the animations run far slower than wall clock,
+  // and pressing keys early just drops the guesses.
+  const ready = () => page.waitForFunction(
+    () => window.__ganzfeld?.ready() || window.__ganzfeld?.resultOpen(),
+    null, { timeout: 90000 }
+  );
+  await ready();
   for (let i = 0; i < 25; i++) {
-    const key = String(1 + (i % 5));
-    await page.keyboard.press(key);
+    if (await page.evaluate(() => window.__ganzfeld.resultOpen())) break;
+    await page.keyboard.press(String(1 + (i % 5)));
     if (i === 0) { await page.waitForTimeout(Math.max(240, 620 / Number(turbo))); await shot('reveal'); }
     if (i === 8) { await page.waitForTimeout(Math.max(240, 620 / Number(turbo))); await shot('midrun'); }
-    await page.waitForTimeout(Math.max(420, 1250 / Number(turbo)));
-    const busy = await page.evaluate(() => !!document.querySelector('#result.on'));
-    if (busy) break;
+    await ready().catch(() => {});
   }
-  await page.waitForTimeout(1800);
+  await page.waitForFunction(() => window.__ganzfeld?.resultOpen(), null, { timeout: 60000 })
+    .catch(() => console.error('WARN: result modal never opened'));
+  await page.waitForTimeout(1200);
   await shot('result');
 
   // read the reported numbers straight out of the DOM

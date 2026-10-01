@@ -24,8 +24,10 @@ export const TURBO = Math.max(1, parseFloat(PARAMS.get('turbo') || '1'));
 function detectQuality() {
   const forced = PARAMS.get('q');
   if (forced) return forced;
-  const saved = localStorage.getItem('psilab.quality');
-  if (saved) return saved;
+  // No localStorage read here. Reading it threw on Safari with site data
+  // blocked and in a partitioned iframe, and because this runs during module
+  // evaluation the throw took the whole app down before the title painted —
+  // a white screen. Nothing ever wrote this key, so there was nothing to read.
   const mem = navigator.deviceMemory || 4;
   const cores = navigator.hardwareConcurrency || 4;
   const small = Math.min(window.innerWidth, window.innerHeight) < 500;
@@ -199,11 +201,30 @@ async function submitGuess(sym) {
   setPickerEnabled(false);
   const picked = picker.querySelector(`[data-sym="${sym}"]`);
   picked?.classList.add('sel');
-  const res = await run.guess(sym);
+  let res;
+  try {
+    res = await run.guess(sym);
+  } catch (err) {
+    // Never leave the picker dead and silent. Before this, anything thrown in
+    // the reveal left every symbol at pointer-events:none with no message, so
+    // the only way out was the back arrow — which looks exactly like the game
+    // crashing back to the menu.
+    picked?.classList.remove('sel');
+    setPickerEnabled(true);
+    reportError(err, 'guess');
+    return;
+  }
   picked?.classList.remove('sel');
   if (!res) { setPickerEnabled(true); return; }
-  if (res.done) { await finishZener(); return; }
-  await run.nextTrial();
+  if (res.done) {
+    try { await finishZener(); } catch (err) { reportError(err, 'finish'); }
+    return;
+  }
+  try {
+    await run.nextTrial();
+  } catch (err) {
+    reportError(err, 'deal');
+  }
   setPickerEnabled(true);
 }
 
@@ -227,6 +248,12 @@ function setStat(el, html) {
 }
 
 function onRunUpdate(s) {
+  // ctx.onUpdate is shared by both modes, but only ZenerRun's snapshot carries
+  // index/streak/results. Remote viewing pushes its own shape here on every
+  // stage change, and reading s.results.length off it threw — which escaped
+  // mountUI(), so finish() was never awaited and the player's committed
+  // ranking was neither revealed nor logged.
+  if (!s || !Array.isArray(s.results)) return;
   setStat(document.getElementById('z-trial'), `${s.index}<small>/${TRIALS}</small>`);
   setStat(document.getElementById('z-hits'), `${s.hits}<small>/${Math.round(TRIALS * CHANCE)}</small>`);
   setStat(document.getElementById('z-streak'), String(s.streak));
@@ -407,22 +434,60 @@ function renderStats() {
 
 /* ---------- toast ---------- */
 let toastEl = null;
-function toast(msg) {
+/** @param {number} ms how long it stays up. Errors get longer than notices. */
+function toast(msg, ms = 2600) {
   if (!toastEl) {
     toastEl = el('div', '');
     Object.assign(toastEl.style, {
       position: 'absolute', left: '50%', bottom: '14%', transform: 'translateX(-50%)',
       background: 'rgba(23,19,32,.96)', border: '2px solid #3a3048', borderRadius: '12px',
       padding: '11px 18px', fontWeight: '800', fontSize: '14px', pointerEvents: 'none',
-      boxShadow: '0 6px 0 #0d0a14', transition: 'opacity .3s', zIndex: 50,
+      boxShadow: '0 6px 0 #0d0a14', transition: 'opacity .3s',
+      // above the result modal (60): an error that a panel covers is an error
+      // nobody reports
+      zIndex: 70, maxWidth: 'min(92vw, 460px)', textAlign: 'center', lineHeight: '1.4',
     });
     uiLayer.appendChild(toastEl);
   }
   toastEl.textContent = msg;
   toastEl.style.opacity = '1';
   clearTimeout(toastEl._t);
-  toastEl._t = setTimeout(() => { toastEl.style.opacity = '0'; }, 2000);
+  toastEl._t = setTimeout(() => { toastEl.style.opacity = '0'; }, ms);
 }
+
+/* ---------- error surface ---------- */
+/**
+ * A failure on someone's phone was completely invisible: no message, no log
+ * anyone could read, just a game that stopped responding or a tab that
+ * reloaded itself back to the title. That is unfixable by anyone who cannot
+ * reproduce it, so every error now says so on screen and keeps the last few
+ * where they can be read back out of window.__ganzfeld.errors.
+ */
+const errorLog = [];
+function reportError(err, where = '') {
+  const msg = (err && (err.message || err.reason || err)) || 'unknown error';
+  const line = `${where ? where + ': ' : ''}${msg}`;
+  errorLog.push({ at: new Date().toISOString(), where, message: String(msg), stack: err?.stack || null });
+  if (errorLog.length > 20) errorLog.shift();
+  console.error('[ganzfeld]', line, err);
+  try { toast(`Something broke — ${line}`, 9000); } catch { /* the toast must never mask the error */ }
+}
+
+addEventListener('error', (e) => reportError(e.error || e.message, 'uncaught'));
+addEventListener('unhandledrejection', (e) => reportError(e.reason, 'promise'));
+
+// A lost WebGL context is how a phone short of graphics memory actually fails:
+// the canvas goes black or the tab reloads, and nothing in the page ever said
+// why. Claim the event so the browser does not tear the page down silently.
+canvas.addEventListener('webglcontextlost', (e) => {
+  e.preventDefault();
+  sceneVisible = false;
+  reportError('the graphics context was lost — reload to continue', 'webgl');
+}, false);
+canvas.addEventListener('webglcontextrestored', () => {
+  sceneVisible = (screen === 'title' || screen === 'zener');
+  toast('Graphics restored.');
+}, false);
 
 /* ---------- input ---------- */
 addEventListener('keydown', (e) => {
@@ -500,6 +565,8 @@ window.__ganzfeld = {
   screen: () => screen,
   rvStage: () => (rvRun ? { i: rvRun.stageIndex, id: rvRun.stages[rvRun.stageIndex]?.id } : null),
   quality,
+  /** Everything that has gone wrong this session, for reading back off a device. */
+  errors: () => errorLog.slice(),
 };
 
 console.log(`[ganzfeld] quality=${quality}`);

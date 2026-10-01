@@ -36,6 +36,17 @@ const LAND_AT = 0.94;
 const PUNCH_DUR = 0.18;
 const punchAt = (k) => easeOutBack(k, 3.4) * (1 - k);
 
+/**
+ * One box geometry for every card that will ever exist. Each card used to
+ * allocate its own, so a 25-trial run created and destroyed 25 sets of GPU
+ * vertex buffers for an identical shape.
+ */
+let _geo = null;
+function cardGeometry() {
+  if (!_geo) _geo = new THREE.BoxGeometry(CARD_W, CARD_H, THICK);
+  return _geo;
+}
+
 /** Textures are shared across every card — 25 canvases would be absurd. */
 const texCache = new Map();
 function faceTexture(symbol) {
@@ -77,9 +88,11 @@ export class Card {
     });
     // BoxGeometry material order: +x, -x, +y, -y, +z, -z
     this.mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(CARD_W, CARD_H, THICK),
+      cardGeometry(),
       [edge, edge, edge, edge, front, back]
     );
+    // kept so dispose() can free them; they are per-card, not shared
+    this._materials = [edge, front, back];
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = false;
 
@@ -307,7 +320,12 @@ export class Card {
   }
 
   dispose() {
-    this.mesh.geometry.dispose();
-    // shared textures/materials are intentionally not disposed here
+    // The geometry is shared by every card, so disposing it here would destroy
+    // the deck. The three MATERIALS are not shared — each card builds its own
+    // precisely so a hit can light one card's rim without lighting all of them
+    // — and none of them was ever freed, so every run leaked 75 of them. Only
+    // the textures inside them are shared, and those stay in texCache.
+    for (const m of this._materials) m.dispose();
+    this._materials.length = 0;
   }
 }

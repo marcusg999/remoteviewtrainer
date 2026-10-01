@@ -95,7 +95,7 @@ export class ZenerRun {
   /** A visible stack of remaining cards, so the run has a physical quantity. */
   _buildDeckStack() {
     this.stack = new THREE.Group();
-    this.stack.position.set(2.45, 0.04, 0.35);
+    this.stack.position.set(1.95, 0.04, 0.62);
     this.stack.rotation.x = -Math.PI / 2 + 0.05;
     this.stack.rotation.z = 0.08;
     const geo = new THREE.BoxGeometry(CARD_W * 0.78, CARD_H * 0.78, 0.012);
@@ -137,7 +137,7 @@ export class ZenerRun {
     this.active = card;
 
     // deal: slide in from the deck with a small arc
-    card.group.position.set(2.45, 0.12, 0.35);
+    card.group.position.set(1.95, 0.12, 0.62);
     card.group.scale.setScalar(0.82);
     audio.sfxDeal();
     const from = card.group.position.clone();
@@ -183,6 +183,8 @@ export class ZenerRun {
       this.hits++;
       this.streak++;
       this.bestStreak = Math.max(this.bestStreak, this.streak);
+
+      // beat 1 — the card itself reacts
       card.pop();
       audio.sfxHit(this.streak - 1);
       this.ctx.director.addTrauma(Math.min(0.55, 0.26 + this.streak * 0.07));
@@ -191,12 +193,23 @@ export class ZenerRun {
         speed: 3.1, spread: 1.5, size: 11, life: 1.0,
         colors: [0x49d17c, 0xe8a33d, 0xfff0cf, 0x9fe8bd],
       });
+
+      // beat 2 — the word lands
+      await this.ctx.tweens.add({ dur: 0.1 });
       this.ctx.floatText.spawn(anchor, 'HIT', { kind: 'hit' });
+
+      // beat 3 — the streak, only once it is worth saying
       if (this.streak >= 3) {
+        await this.ctx.tweens.add({ dur: 0.16 });
         this.ctx.floatText.spawn(
           new THREE.Vector3(1.05, 1.95, -0.5), `${this.streak} IN A ROW`,
           { kind: 'streak', dur: 0.75, drift: 0.8 }
         );
+        this.ctx.director.addTrauma(0.14);
+        this.ctx.particles.burst(new THREE.Vector3(0.9, 1.5, -0.5), {
+          count: 18 + this.streak * 4, speed: 2.4, spread: 1.8, size: 9, life: 0.8,
+          colors: [0xe8a33d, 0xfff0cf],
+        });
       }
     } else {
       this.streak = 0;

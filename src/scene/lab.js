@@ -234,8 +234,9 @@ export class Lab {
       color: 0xe8ddc4, roughness: 0.65, emissive: 0x2a1c08, emissiveIntensity: 0.3,
     });
     const flameMat = new THREE.MeshBasicMaterial({
-      color: 0xffc46b, transparent: true, opacity: 0.95, depthWrite: false,
+      color: 0xffe3a8, transparent: true, opacity: 0.98, depthWrite: false,
     });
+    const glowTex = this._glowTexture();
 
     for (const sp of spots) {
       const grp = new THREE.Group();
@@ -252,6 +253,16 @@ export class Lab {
       flame.position.y = h + 0.085 * sp.s;
       grp.add(flame);
 
+      // additive halo: this is what makes the candle read as a light source
+      // on the low tier, where the bloom pass is switched off entirely
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTex, color: 0xffb860, transparent: true,
+        blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.85,
+      }));
+      glow.scale.setScalar(1.15 * sp.s);
+      glow.position.y = flame.position.y;
+      grp.add(glow);
+
       const light = new THREE.PointLight(0xffb45c, 5.2 * sp.s, 9, 1.85);
       light.position.y = h + 0.14;
       if (this.quality === 'high') {
@@ -264,7 +275,7 @@ export class Lab {
 
       this.scene.add(grp);
       this.candles.push({
-        grp, light, flame,
+        grp, light, flame, glow,
         base: 5.2 * sp.s,
         // each flame flickers on its own noise, or they pulse in lockstep and
         // the room reads as a single animated light instead of three candles
@@ -272,6 +283,23 @@ export class Lab {
         speed: 1.6 + randomFloat() * 1.4,
       });
     }
+  }
+
+  /** Soft radial falloff for the candle halo. */
+  _glowTexture() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, 'rgba(255,230,180,1)');
+    g.addColorStop(0.25, 'rgba(255,186,96,0.55)');
+    g.addColorStop(0.6, 'rgba(255,150,60,0.13)');
+    g.addColorStop(1, 'rgba(255,140,50,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
   }
 
   _buildPost() {
@@ -312,6 +340,10 @@ export class Lab {
       c.light.intensity = c.base * k;
       c.flame.scale.set(0.7 + n * 0.07, 1.7 + n * 0.24, 0.7 + n * 0.07);
       c.flame.position.x = Math.sin(t * 2.7) * 0.008;
+      if (c.glow) {
+        c.glow.scale.setScalar((1.15 + n * 0.16) * (c.base / 5.2));
+        c.glow.material.opacity = 0.72 + n * 0.16;
+      }
       c.light.position.x = Math.sin(t * 1.9) * 0.03;
       c.light.position.z = Math.cos(t * 2.4) * 0.03;
     }
@@ -332,15 +364,15 @@ export class Lab {
       this.layout.tableauMax = 5;
       this.layout.tableauScale = 0.30;
       this.layout.tableauZ = 0.48;
-      this.cameraRig.base.set(0, 2.5, 3.15);
-      this.cameraRig.target.set(0, 0.66, -0.12);
+      this.cameraRig.base.set(0, 2.52, 3.45);
+      this.cameraRig.target.set(0, 0.74, -0.14);
     } else {
       this.layout.tableauSpread = 0.50;
       this.layout.tableauMax = 7;
       this.layout.tableauScale = 0.37;
       this.layout.tableauZ = 0.62;
-      this.cameraRig.base.set(0, 2.9, 4.05);
-      this.cameraRig.target.set(0, 0.46, -0.15);
+      this.cameraRig.base.set(0, 2.95, 4.5);
+      this.cameraRig.target.set(0, 0.60, -0.18);
     }
     this.onLayout?.(this.layout, this.cameraRig);
     const dprCap = this.quality === 'high' ? 2 : this.quality === 'medium' ? 1.5 : 1;

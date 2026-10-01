@@ -22,7 +22,8 @@
 
   --r:14px;
   --shadow:0 10px 0 var(--panel-lip), 0 16px 34px rgba(0,0,0,.6);
-  --font: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font: "Archivo", ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
 }
@@ -52,7 +53,11 @@ html,body{
 .noscript{ position:fixed; inset:0; display:grid; place-items:center; }
 
 /* ---------- type ---------- */
-.t-mono{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+.t-mono{
+  font-family:var(--mono);
+  font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+  letter-spacing:-.02em;
+}
 
 .outlined{
   font-weight:900;
@@ -67,7 +72,8 @@ html,body{
 .float-text{
   position:absolute; top:0; left:0;
   will-change:transform,opacity;
-  font-weight:900;
+  font-family:var(--mono);
+  font-weight:700;
   font-size:clamp(26px, 5.2vw, 46px);
   letter-spacing:.01em;
   white-space:nowrap;
@@ -138,9 +144,9 @@ html,body{
   background:radial-gradient(ellipse at 50% 42%, rgba(12,9,20,.3), rgba(4,3,8,.86)); }
 #title h1{
   margin:0; font-size:clamp(40px,10vw,84px); line-height:.95;
-  color:var(--ink); letter-spacing:.06em;
+  color:var(--ink); letter-spacing:.04em; font-weight:900;
 }
-#title .sub{ color:var(--brass); font-size:clamp(12px,2.6vw,15px); letter-spacing:.34em; text-transform:uppercase; margin:0 0 6px; }
+#title .sub{ font-family:var(--mono); color:var(--brass); font-size:clamp(11px,2.4vw,13px); letter-spacing:.3em; text-transform:uppercase; margin:0 0 8px; font-weight:600; }
 #title .blurb{ color:var(--ink-dim); max-width:46ch; font-size:15px; line-height:1.55; margin:10px 0 20px; }
 .menu{ display:flex; flex-direction:column; gap:12px; width:min(330px,86vw); }
 
@@ -158,8 +164,21 @@ html,body{
   padding:7px 10px 8px;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
 }
-.stat .k{ font-size:9.5px; letter-spacing:.17em; text-transform:uppercase; color:var(--ink-faint); font-weight:800; }
-.stat .v{ font-size:clamp(17px,4.4vw,24px); font-weight:900; font-variant-numeric:tabular-nums; line-height:1.12; }
+.stat .k{ font-family:var(--mono); font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--ink-faint); font-weight:600; }
+.stat .v{
+  font-family:var(--mono); font-size:clamp(17px,4.4vw,24px); font-weight:700;
+  font-variant-numeric:tabular-nums; line-height:1.12; letter-spacing:-.03em;
+  will-change:transform;
+}
+/* The reference punches a number when it changes: it scales up and spills
+   past its panel, then settles. Measured at roughly 3 frames out, 15 back. */
+@keyframes statPunch{
+  0%   { transform:scale(1); }
+  18%  { transform:scale(1.52); }
+  100% { transform:scale(1); }
+}
+.stat .v.punch{ animation:statPunch .34s cubic-bezier(.2,1.5,.4,1); }
+.stat{ overflow:visible; }
 .stat .v small{ font-size:.58em; color:var(--ink-faint); font-weight:800; }
 .stat.hot .v{ color:var(--amber); }
 .stat.good .v{ color:var(--hit); }
@@ -199,12 +218,12 @@ html,body{
   transform:translateY(-6px) scale(1.04);
 }
 .sym .key{
-  position:absolute; top:3px; right:6px;
-  font-size:10px; font-weight:900; color:var(--ink-faint);
+  position:absolute; top:3px; right:6px; font-family:var(--mono);
+  font-size:10px; font-weight:600; color:var(--ink-faint);
 }
 .sym.sel .key{ color:var(--amber); }
 
-.hint{ text-align:center; color:var(--ink-faint); font-size:12px; letter-spacing:.1em; text-transform:uppercase; margin:10px 0 2px; font-weight:800; }
+.hint{ font-family:var(--mono); text-align:center; color:var(--ink-faint); font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; margin:10px 0 2px; font-weight:600; }
 
 /* ---------- generic rows ---------- */
 .row{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
@@ -234,8 +253,9 @@ html,body{
 /* the big chips x mult readout, straight from the reference */
 .bigscore{ display:flex; align-items:center; justify-content:center; gap:12px; margin:14px 0 6px; }
 .bigscore .pill{
+  font-family:var(--mono);
   min-width:112px; padding:10px 16px; border-radius:12px;
-  font-size:clamp(30px,8vw,48px); font-weight:900; text-align:center;
+  font-size:clamp(30px,8vw,48px); font-weight:700; text-align:center;
   color:#fff; font-variant-numeric:tabular-nums;
   text-shadow:0 3px 0 rgba(0,0,0,.4);
 }
@@ -245,8 +265,8 @@ html,body{
 
 .statgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin:14px 0; }
 .statgrid .cell{ background:rgba(0,0,0,.26); border:1px solid var(--line); border-radius:10px; padding:9px 11px; }
-.statgrid .cell .k{ font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); font-weight:800; }
-.statgrid .cell .v{ font-size:19px; font-weight:900; font-variant-numeric:tabular-nums; margin-top:1px; }
+.statgrid .cell .k{ font-family:var(--mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); font-weight:600; }
+.statgrid .cell .v{ font-family:var(--mono); font-size:19px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:1px; letter-spacing:-.02em; }
 
 .verdict{ border-radius:11px; padding:11px 14px; font-weight:900; text-align:center; letter-spacing:.03em; margin:4px 0 2px; border:2px solid; }
 .verdict.neutral{ background:rgba(109,100,128,.16); border-color:#4b4260; color:var(--ink-dim); }
@@ -258,6 +278,7 @@ html,body{
 
 .toprow{ display:flex; gap:8px; align-items:center; margin-bottom:10px; }
 .chip{
+  font-family:var(--mono);
   display:inline-flex; align-items:center; gap:6px;
   background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:999px;
   padding:4px 11px; font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-dim);

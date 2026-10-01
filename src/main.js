@@ -212,12 +212,25 @@ function buildPips() {
   for (let i = 0; i < TRIALS; i++) p.appendChild(el('span', 'pip'));
 }
 
+/**
+ * Set a stat's text, and punch it if the value actually changed.
+ * The reference scales a number up past its panel when it updates; a silent
+ * text swap is the single biggest reason a counter feels dead.
+ */
+function setStat(el, html) {
+  if (el.innerHTML === html) return;
+  el.innerHTML = html;
+  el.classList.remove('punch');
+  void el.offsetWidth;          // restart the animation if it is already running
+  el.classList.add('punch');
+}
+
 function onRunUpdate(s) {
-  document.getElementById('z-trial').innerHTML = `${s.index}<small>/${TRIALS}</small>`;
-  document.getElementById('z-hits').innerHTML = `${s.hits}<small>/${Math.round(TRIALS * CHANCE)}</small>`;
-  document.getElementById('z-streak').textContent = s.streak;
+  setStat(document.getElementById('z-trial'), `${s.index}<small>/${TRIALS}</small>`);
+  setStat(document.getElementById('z-hits'), `${s.hits}<small>/${Math.round(TRIALS * CHANCE)}</small>`);
+  setStat(document.getElementById('z-streak'), String(s.streak));
   const zEl = document.getElementById('z-z');
-  zEl.textContent = s.index >= 5 ? (s.z >= 0 ? '+' : '') + s.z.toFixed(2) : '—';
+  setStat(zEl, s.index >= 5 ? (s.z >= 0 ? '+' : '') + s.z.toFixed(2) : '&mdash;');
   const zBox = document.getElementById('z-z-box');
   zBox.className = 'stat' + (s.index < 5 ? '' : s.z >= 1.64 ? ' good' : s.z <= -1.64 ? ' bad' : '');
   document.getElementById('z-hits-box').className =

@@ -15,11 +15,20 @@ mkdirSync(path.join(OUT, 'assets'), { recursive: true });
 
 const html = readFileSync(path.join(DIST, 'index.html'), 'utf8');
 const assets = readdirSync(path.join(DIST, 'assets'));
-const jsName = assets.find((f) => f.endsWith('.js'));
+// The entry chunk is named by vite.config's entryFileNames. Picking "the
+// first .js" silently chose a dynamic-import chunk once code splitting was
+// introduced, and published it as the page's entry point.
+const jsName = 'app.js';
+if (!assets.includes(jsName)) {
+  throw new Error(`expected entry chunk ${jsName} in dist/assets, found: ${assets.join(', ')}`);
+}
 const cssName = assets.find((f) => f.endsWith('.css'));
 
 const css = readFileSync(path.join(DIST, 'assets', cssName), 'utf8');
-copyFileSync(path.join(DIST, 'assets', jsName), path.join(OUT, 'assets', jsName));
+// Every chunk ships, not just the entry: dynamic imports resolve at runtime
+// against sibling files and a missing one fails silently in the viewer.
+const jsFiles = assets.filter((f) => f.endsWith('.js'));
+for (const f of jsFiles) copyFileSync(path.join(DIST, 'assets', f), path.join(OUT, 'assets', f));
 
 // body inner content from the built page
 const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)[1]
@@ -48,4 +57,6 @@ ${body}
 
 writeFileSync(path.join(OUT, 'index.html'), page);
 console.log(`artifact/index.html  ${(page.length / 1024).toFixed(1)} KB`);
-console.log(`artifact/assets/${jsName}  ${(readFileSync(path.join(OUT, 'assets', jsName)).length / 1024).toFixed(1)} KB`);
+for (const f of jsFiles) {
+  console.log(`artifact/assets/${f}  ${(readFileSync(path.join(OUT, 'assets', f)).length / 1024).toFixed(1)} KB`);
+}

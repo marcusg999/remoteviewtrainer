@@ -23,7 +23,13 @@ function uniformityChi2(counts) {
 }
 
 /** Running z over sessions, drawn as an SVG path with a zero line. */
-function zTraceSvg(trace, w = 520, h = 112) {
+/**
+ * @param {boolean} meaningful  below the inference threshold the trace is
+ *   drawn as what it is — noise — with no endpoint marker and no axis
+ *   figures to read off. Rendering it normally would let a player read the
+ *   conclusion off a picture that the numbers beside it refuse to state.
+ */
+function zTraceSvg(trace, w = 520, h = 112, meaningful = true) {
   if (!trace.length) return '';
   const pad = { l: 44, r: 10, t: 12, b: 16 };
   const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
@@ -39,17 +45,21 @@ function zTraceSvg(trace, w = 520, h = 112) {
 
   // the +-1.96 band: inside it, a result is ordinary
   const band = `<rect x="${pad.l}" y="${Y(1.96).toFixed(1)}" width="${iw}" height="${(Y(-1.96) - Y(1.96)).toFixed(1)}" fill="rgba(109,100,128,.14)"/>`;
+  const stroke = meaningful ? '#e8a33d' : '#6d6480';
 
   return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img"
      aria-label="Running z-score across ${trace.length} sessions, currently ${last.z.toFixed(2)}">
     ${band}
     <line x1="${pad.l}" y1="${Y(0)}" x2="${w - pad.r}" y2="${Y(0)}" stroke="#4b4260" stroke-width="1"/>
+    ${meaningful ? `
     <text x="2" y="${Y(1.96) + 4}" fill="#8a8099" font-size="11" font-family="monospace">+1.96</text>
     <text x="2" y="${Y(-1.96) + 4}" fill="#8a8099" font-size="11" font-family="monospace">−1.96</text>
     <text x="2" y="${Y(0) + 4}" fill="#8a8099" font-size="11" font-family="monospace">0</text>
-    <path d="${area}" fill="rgba(232,163,61,.14)"/>
-    <path d="${line}" fill="none" stroke="#e8a33d" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${X(trace.length - 1).toFixed(1)}" cy="${Y(last.z).toFixed(1)}" r="4" fill="#e8a33d" stroke="#171320" stroke-width="2"/>
+    <path d="${area}" fill="rgba(232,163,61,.14)"/>` : ''}
+    <path d="${line}" fill="none" stroke="${stroke}" stroke-width="2"
+      ${meaningful ? '' : 'stroke-dasharray="3 3" opacity="0.5"'}
+      stroke-linejoin="round" stroke-linecap="round"/>
+    ${meaningful ? `<circle cx="${X(trace.length - 1).toFixed(1)}" cy="${Y(last.z).toFixed(1)}" r="4" fill="#e8a33d" stroke="#171320" stroke-width="2"/>` : ''}
   </svg>`;
 }
 
@@ -159,8 +169,10 @@ export function renderCareer(host, { onBack, onPlay }) {
 
         ${trace.length ? `
         <h3 class="sub-h">Running z across sessions</h3>
-        <p class="sub-note">The shaded band is the ordinary range. A single lucky set moves this a long way early on and almost nothing later — that is the point of it.</p>
-        <div class="chart">${zTraceSvg(trace)}</div>` : ''}
+        <p class="sub-note">${enough
+          ? 'The shaded band is the ordinary range. A single lucky set moves this a long way early on and almost nothing later — that is the point of it.'
+          : 'Too few trials to plot a meaningful z yet. The shape here is noise, and it is drawn faintly to say so.'}</p>
+        <div class="chart">${zTraceSvg(trace, 520, 112, enough)}</div>` : ''}
 
         ${sym.any && view.id !== 'rv' ? `
         <h3 class="sub-h">Your call bias</h3>

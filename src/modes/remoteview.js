@@ -81,6 +81,19 @@ import { summarize } from '../core/stats.js';
 import { logSession } from '../core/store.js';
 import { TARGETS, CANDIDATES, chooseTargetSet, paintTarget } from '../data/targets.js';
 import { Sketchpad, padTools } from '../ui/sketchpad.js';
+
+/**
+ * While a stroke is in flight the pad's tools go inert. The ideogram stage
+ * asks for one fast reflexive movement and gives no undo for a clear, so a
+ * stroke must never be able to end on CLEAR.
+ */
+function guardPadTools(padwrap, pad) {
+  const on = () => padwrap.classList.add('drawing');
+  const off = () => setTimeout(() => padwrap.classList.remove('drawing'), 600);
+  pad.el.addEventListener('pointerdown', on);
+  addEventListener('pointerup', off);
+  addEventListener('pointercancel', off);
+}
 import * as audio from '../juice/audio.js';
 import '../ui/rv.css';
 
@@ -307,6 +320,7 @@ export class RemoteViewRun {
     const padwrap = el('div', 'rv-padwrap');
     padwrap.appendChild(pad.el);
     padwrap.appendChild(padTools(pad));
+    guardPadTools(padwrap, pad);
     wrap.appendChild(padwrap);
 
     const timer = el('div', 'rv-timer');
@@ -332,7 +346,7 @@ export class RemoteViewRun {
       fill.style.transform = `scaleX(${(1 - k).toFixed(3)})`;
       const left = Math.max(0, Math.ceil((total * (1 - k)) / 1000));
       this._nodes.countdown.innerHTML = k >= 1
-        ? 'Window <b>closed</b> — that is long enough'
+        ? 'Window <b>closed</b>'
         : `Window <b>${left}s</b>`;
       // the pad itself warms as the window runs out, then settles when it shuts
       if (k > 0.75) padEl?.classList.add('closing');
@@ -439,6 +453,7 @@ export class RemoteViewRun {
     const padwrap = el('div', 'rv-padwrap');
     padwrap.appendChild(pad.el);
     padwrap.appendChild(padTools(pad));
+    guardPadTools(padwrap, pad);
     wrap.appendChild(padwrap);
     return wrap;
   }

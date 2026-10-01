@@ -426,19 +426,31 @@
   100% { transform:scaleY(1); }
 }
 
-/* UNDO and CLEAR sit inside the pad's top edge. Below the pad they were
-   under the drawing hand on a phone, and raising them to a 44px target
-   had pushed them further under it. */
-.rv-padwrap{ position:relative; }
+/* UNDO and CLEAR live in the pad's CHROME, not on its surface.
+   Below the pad they sat under a phone user's drawing hand, and raising
+   them to a 44px target pushed them further under it. Overlaying them on
+   the canvas was worse: the stage asks for one fast reflexive stroke, and
+   a stroke that wanders top-right would land on CLEAR — destroying the
+   only ideogram, inside a nine-second window, with no undo for a clear.
+   They now occupy a strip above the canvas, so the whole surface stays
+   drawable. */
+.rv-padwrap{
+  position:relative;
+  display:flex; flex-direction:column; gap:6px;
+  flex:1 1 auto; min-height:0;
+}
 .rv-padtools{
-  position:absolute; top:8px; right:8px; z-index:3;
   display:flex; gap:6px; margin:0;
+  justify-content:flex-end;
+  flex:0 0 auto;
+  order:-1;                 /* above the canvas, never over it */
 }
-.rv-padtools .rv-padbtn{
-  min-height:44px; min-width:62px;
-  background:rgba(12,10,18,.82);
-  backdrop-filter:none;
-}
+.rv-padtools .rv-padbtn{ min-height:44px; min-width:62px; }
+
+/* Belt and braces: if a stroke is in flight the tools cannot take the
+   pointer, whatever the layout does at some width I have not tested. */
+.rv-padwrap.drawing .rv-padtools{ opacity:.25; pointer-events:none; }
+.rv-padtools{ transition:opacity .18s ease; }
 @media (prefers-reduced-motion: reduce){
   .rv-pad.spent{ animation:none; }
 }

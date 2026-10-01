@@ -145,7 +145,7 @@
   -webkit-user-select:none; user-select:none;
   cursor:crosshair;
 }
-.rv-pad.rv-ideogram{ height:clamp(120px,22vh,180px); }
+.rv-pad.rv-ideogram{ flex:1 1 auto; min-height:clamp(200px,32vh,340px); }
 .rv-pad.rv-sketch{ flex:1 1 auto; min-height:clamp(180px,34vh,420px); }
 .rv-pad::after{
   content:""; position:absolute; inset:0; pointer-events:none;
@@ -153,7 +153,7 @@
   box-shadow:inset 0 0 0 1px rgba(201,162,106,.14);
 }
 .rv-padtools{ display:flex; gap:8px; flex:0 0 auto; flex-wrap:wrap; }
-.rv-padbtn{ min-height:38px; }
+.rv-padbtn{ min-height:44px; }
 
 /* ---------- the ideogram timer ---------- */
 .rv-timer{
@@ -196,7 +196,7 @@
 .rv-chips{ display:flex; flex-wrap:wrap; gap:6px; }
 .rv-chip{
   appearance:none; cursor:pointer;
-  min-height:36px; padding:7px 12px;
+  min-height:44px; padding:7px 12px;
   border-radius:999px; border:2px solid var(--rv-line);
   background:rgba(0,0,0,.28);
   color:var(--rv-dim); font-family:inherit;
@@ -214,14 +214,14 @@
 .rv-chip.rv-own.on{ border-style:solid; }
 .rv-freerow{ display:flex; gap:7px; margin-top:8px; }
 .rv-free{
-  flex:1 1 auto; min-width:0; min-height:40px;
+  flex:1 1 auto; min-width:0; min-height:44px;
   background:rgba(0,0,0,.38); color:var(--rv-ink);
   border:2px solid var(--rv-line); border-radius:10px;
   padding:9px 11px; font-family:inherit; font-size:14px; font-weight:600;
 }
 .rv-free::placeholder{ color:var(--rv-faint); }
 .rv-free:focus{ outline:none; border-color:var(--rv-amber); }
-.rv-add{ flex:0 0 auto; min-height:40px; min-width:52px; }
+.rv-add{ flex:0 0 auto; min-height:44px; min-width:52px; }
 
 /* ---------- ranking stage ---------- */
 .rv-grid{
@@ -252,12 +252,14 @@
   width:30px; height:30px; border-radius:9px;
   display:grid; place-items:center;
   font-size:15px; font-weight:900; font-variant-numeric:tabular-nums;
-  background:rgba(8,6,14,.78); border:2px solid var(--rv-line);
-  color:var(--rv-faint);
+  background:rgba(8,6,14,.34); border:2px solid rgba(255,255,255,.14);
+  color:transparent;
+  transition:background .14s, border-color .14s, color .14s, transform .12s;
 }
+.rv-cand:hover .rv-cand-rank{ background:rgba(8,6,14,.6); border-color:rgba(255,255,255,.28); }
 .rv-cand.ranked{ border-color:var(--rv-brass); }
 .rv-cand.ranked .rv-cand-name{ color:var(--rv-ink); }
-.rv-cand.ranked .rv-cand-rank{ background:#2a2336; border-color:var(--rv-brass); color:var(--rv-ink); }
+.rv-cand.ranked .rv-cand-rank{ background:#2a2336; border-color:var(--rv-brass); color:var(--rv-ink); transform:scale(1.06); }
 .rv-cand.first{
   border-color:var(--rv-amber);
   box-shadow:0 5px 0 #4a3310, 0 0 22px rgba(232,163,61,.4);
@@ -334,7 +336,7 @@
 /* ---------- wide screens: keep a readable column, not a 1600px pad ---------- */
 @media (min-width:900px){
   .rv-stage > *{ width:100%; max-width:1040px; margin-inline:auto; }
-  .rv-pad.rv-ideogram{ height:clamp(150px,24vh,250px); }
+  .rv-pad.rv-ideogram{ min-height:clamp(220px,30vh,320px); }
 }
 
 /* ---------- narrow screens ---------- */
@@ -350,4 +352,48 @@
 }
 @media (prefers-reduced-motion: reduce){
   .rv-stage.on{ animation:none; }
+}
+
+
+/* The ideogram stage used its centring spacers to push a small pad into the
+   middle of a mostly empty screen. The pad takes that space instead. */
+.rv-stage[data-stage="ideogram"]::before,
+.rv-stage[data-stage="ideogram"]::after{ flex:0 1 0; }
+
+/* The sticky footer was drawing over the last card in the scroll region —
+   at 390px the hint text collided with the TEMPERATURE header. */
+.rv-scroll{ padding-bottom:84px; }
+
+/* ---------------------------------------------------------------
+   Ranking stage: the viewer's own evidence, carried forward.
+   Ranking is the one moment two things must be compared, and the
+   stage used to show only the candidates.
+   --------------------------------------------------------------- */
+.rv-evidence{
+  position:sticky; top:0; z-index:4;
+  display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;
+  padding:10px 12px; margin:0 0 10px;
+  background:rgba(12,10,18,.92);
+  border:1px solid var(--rv-line, #322a42); border-radius:10px;
+}
+.rv-ev-shot{ margin:0; flex:0 0 auto; text-align:center; }
+.rv-ev-shot img{
+  display:block; border-radius:6px; border:1px solid var(--rv-line, #322a42);
+  background:#f3ead8; object-fit:contain;
+}
+.rv-ev-shot figcaption{
+  font-family:var(--mono, monospace); font-size:8.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-faint, #6d6480); margin-top:4px;
+}
+.rv-ev-words{ display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start; flex:1 1 140px; min-width:0; }
+.rv-ev-word{
+  font-size:11px; font-weight:700; color:var(--brass, #c9a26a);
+  background:rgba(201,162,106,.12); border:1px solid rgba(201,162,106,.3);
+  border-radius:999px; padding:2px 8px; white-space:nowrap;
+}
+.rv-ev-empty{ margin:0; font-size:12px; color:var(--ink-faint, #6d6480); }
+@media (max-width:520px){
+  .rv-evidence{ gap:8px; padding:8px; }
+  .rv-ev-shot img{ width:72px; height:54px; }
+  .rv-ev-shot:nth-of-type(2) img{ width:88px; height:66px; }
 }

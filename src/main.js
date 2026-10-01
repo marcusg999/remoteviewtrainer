@@ -475,7 +475,7 @@ function loop(now) {
   frames++; fpsAccum += dt;
   if (fpsAccum >= 3) {
     const fps = frames / fpsAccum;
-    if (fps < 34 && lab.bloom && lab.quality !== 'low') { lab.setBloom(0.3); lab.bloom = null; }
+    if (fps < 34) lab.shedLoad();
     frames = 0; fpsAccum = 0;
   }
 

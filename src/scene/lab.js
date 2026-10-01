@@ -267,12 +267,11 @@ export class Lab {
 
       const light = new THREE.PointLight(0xffb45c, 5.2 * sp.s, 9, 1.85);
       light.position.y = h + 0.38;
-      if (this.quality === 'high') {
-        light.castShadow = true;
-        light.shadow.mapSize.set(512, 512);
-        light.shadow.bias = -0.004;
-        light.shadow.camera.far = 12;
-      }
+      // No shadows from the candles. A point light's shadow is a cube, so
+      // three of them is eighteen render passes per frame, and _flicker
+      // moves each light every frame so the maps can never be cached. The
+      // key light above the table casts the shadow that actually reads.
+      light.castShadow = false;
       grp.add(light);
 
       this.scene.add(grp);
@@ -356,6 +355,43 @@ export class Lab {
 
   setExposure(v) { this.grade.uniforms.uExposure.value = v; }
   setBloom(v) { if (this.bloom) this.bloom.strength = v; }
+
+  /**
+   * Shed load when we are visibly missing frames.
+   *
+   * The previous version set `this.bloom = null`, which dropped a reference
+   * and nothing else: the pass was still in the composer, still running its
+   * full downsample/upsample mip chain every frame, and `setBloom` was then
+   * permanently dead behind its own null guard. So the only load-shedding
+   * path in the app shed nothing at all.
+   *
+   * Steps down one stage per call, worst-cost first.
+   */
+  shedLoad() {
+    if (this.shedStage === undefined) this.shedStage = 0;
+    this.shedStage++;
+    switch (this.shedStage) {
+      case 1:
+        // candle shadows are three CUBE maps — 18 render passes — and the
+        // lights move every frame so they can never be cached
+        for (const c of this.candles) c.light.castShadow = false;
+        break;
+      case 2:
+        if (this.bloom) this.bloom.enabled = false;   // EffectComposer honours this
+        break;
+      case 3:
+        this.renderer.setPixelRatio(Math.max(1, this.renderer.getPixelRatio() - 0.25));
+        this.composer.setSize(this.renderer.domElement.clientWidth, this.renderer.domElement.clientHeight);
+        break;
+      case 4:
+        if (this.keyLight) this.keyLight.castShadow = false;
+        this.grade.uniforms.uAberration.value = 0;
+        break;
+      default:
+        this.shedStage = 4;   // nothing left to give
+    }
+    return this.shedStage;
+  }
 
   resize() {
     const el = this.renderer.domElement;

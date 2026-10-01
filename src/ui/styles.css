@@ -400,3 +400,56 @@ html,body{
     radial-gradient(ellipse at 50% 0%, rgba(22,17,33,.94), rgba(5,4,10,.985) 72%),
     #05040a;
 }
+
+/* ---------------------------------------------------------------
+   Career log — mode tabs, and the verdict leading the page
+   --------------------------------------------------------------- */
+.viewtabs{ display:flex; gap:6px; margin:0 0 14px; flex-wrap:wrap; }
+.vtab{
+  flex:1 1 auto; min-height:44px;
+  font-family:inherit; font-weight:800; font-size:12.5px;
+  letter-spacing:.04em; color:var(--ink-dim);
+  background:rgba(0,0,0,.3); border:2px solid var(--line); border-radius:10px;
+  padding:8px 12px; cursor:pointer; display:flex; align-items:center;
+  justify-content:center; gap:7px; transition:color .14s, border-color .14s, background .14s;
+}
+.vtab .n{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);
+  background:rgba(0,0,0,.35); border-radius:999px; padding:1px 7px; }
+.vtab:hover{ color:var(--ink); border-color:var(--brass); }
+.vtab.on{ color:#1a1208; background:linear-gradient(180deg,#f0b652,var(--amber)); border-color:#8f5f14; }
+.vtab.on .n{ color:#3a2608; background:rgba(0,0,0,.14); }
+
+/* The verdict answers the question the player arrived with, so it is the
+   loudest thing on the page rather than a quiet pill below the heading. */
+.verdict{
+  display:flex; align-items:baseline; justify-content:space-between; gap:14px;
+  font-size:clamp(21px,3.2vw,30px); font-weight:900; letter-spacing:.01em;
+  padding:16px 18px; border-radius:12px; text-align:left;
+  border:2px solid; border-left-width:6px;
+}
+.verdict .vl{ min-width:0; }
+.verdict .vz{ font-size:.62em; opacity:.85; white-space:nowrap; }
+.verdict.neutral{ color:var(--ink); border-color:#4b4260; background:rgba(109,100,128,.14); }
+.verdict.weak{ color:var(--amber); border-color:#6d5220; background:rgba(232,163,61,.12); }
+.verdict.strong{ color:var(--hit); border-color:#245c3b; background:rgba(73,209,124,.12); }
+
+/* bias bar now diverges about the 20% tick, so it encodes the deviation */
+.bias-bar i{ position:absolute; top:0; bottom:0; display:block; }
+.bias-bar i.pos{ background:linear-gradient(90deg,#2a6b3f,var(--hit)); }
+.bias-bar i.neg{ background:linear-gradient(90deg,var(--miss),#6b2a2a); }
+
+.smode{
+  font-family:var(--mono); font-size:9.5px; font-weight:700;
+  color:var(--ink-faint); border:1px solid var(--line); border-radius:4px;
+  padding:1px 5px; letter-spacing:.06em;
+}
+.srow{ grid-template-columns:1fr auto auto auto; }
+
+/* the session list and bias table must survive a 390px phone */
+@media (max-width:520px){
+  .bias-row,.bias-head{ grid-template-columns:20px 1fr 54px 44px; }
+  .bias-row .bias-bar{ display:none; }
+  .bias-head span:nth-child(3){ display:none; }
+  .bias-head span:nth-child(4){ text-align:right; }
+  .verdict{ flex-direction:column; align-items:flex-start; gap:4px; }
+}

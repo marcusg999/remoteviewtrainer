@@ -442,8 +442,17 @@ export class RemoteViewRun {
     wrap.appendChild(el('h2', 'rv-title', `${s.title}<small>${s.sub}</small>`));
     wrap.appendChild(el('p', 'rv-lede', s.lede));
 
+    // The ranking stage is the only point in the session where two things
+    // must be compared, and it used to show only one of them: five candidate
+    // pictures and none of the viewer's own work. Recovering the ideogram or
+    // the sketch meant pressing BACK twice. The evidence rides along now.
+    const ev = el('div', 'rv-evidence');
+    ev.id = 'rv-evidence';
+    wrap.appendChild(ev);
+    this._nodes.evidence = ev;
+
     const note = el('div', 'rv-ranknote');
-    note.innerHTML = `Tap to rank &middot; tap again to clear &middot; <b id="rv-rankstate">no first choice yet</b>`;
+    note.innerHTML = `Tap to rank &middot; tap again to clear<b id="rv-rankstate"></b>`;
     wrap.appendChild(note);
     this._nodes.rankState = note.querySelector('#rv-rankstate');
 
@@ -519,6 +528,47 @@ export class RemoteViewRun {
     this._onUpdate();
   }
 
+  /**
+   * Replay the viewer's own notes into the ranking stage: the two pads
+   * redrawn small from their stored strokes, plus every word they tagged.
+   */
+  _buildEvidence() {
+    const host = this._nodes.evidence;
+    if (!host) return;
+    host.innerHTML = '';
+
+    const shot = (pad, label, w, h) => {
+      if (!pad || pad.isEmpty()) return null;
+      const fig = el('figure', 'rv-ev-shot');
+      const img = document.createElement('img');
+      img.src = pad.toDataURL();
+      img.alt = label;
+      img.width = w; img.height = h;
+      fig.appendChild(img);
+      fig.appendChild(el('figcaption', '', label));
+      return fig;
+    };
+
+    const ideo = shot(this.pads.ideogram, 'Ideogram', 96, 72);
+    const sk = shot(this.pads.sketch, 'Sketch', 128, 96);
+    if (ideo) host.appendChild(ideo);
+    if (sk) host.appendChild(sk);
+
+    const words = [];
+    for (const cat of SENSORY_CATEGORIES) {
+      for (const w of this.impressions[cat.id]) words.push(w);
+    }
+    if (words.length) {
+      const box = el('div', 'rv-ev-words');
+      for (const w of words) box.appendChild(el('span', 'rv-ev-word', w));
+      host.appendChild(box);
+    }
+
+    if (!ideo && !sk && !words.length) {
+      host.appendChild(el('p', 'rv-ev-empty', 'You recorded no impressions this session.'));
+    }
+  }
+
   _syncRanking() {
     for (const c of this._nodes.cands) {
       const r = this.ranking.get(c.target.id);
@@ -530,8 +580,8 @@ export class RemoteViewRun {
     const first = firstId ? this.order.find((t) => t.id === firstId) : null;
     if (this._nodes.rankState) {
       this._nodes.rankState.textContent = first
-        ? `first choice: ${first.name}${this.ranking.size < this.candidateCount ? ` (${this.ranking.size}/${this.candidateCount} ranked)` : ' — full ranking'}`
-        : 'no first choice yet';
+        ? ` \u00b7 first choice: ${first.name}${this.ranking.size < this.candidateCount ? ` (${this.ranking.size}/${this.candidateCount} ranked)` : ' \u2014 full ranking'}`
+        : ' \u00b7 no first choice yet';
     }
   }
 
@@ -570,6 +620,7 @@ export class RemoteViewRun {
     if (id === 'sketch') this.pads.sketch._resize();
     if (id === 'ranking') {
       this._paintCandidates();
+      this._buildEvidence();   // on entry: the pads are only filled by now
       this._syncRanking();
       this.ctx.director?.pushIn?.(0.18, new THREE.Vector3(0, 1.0, -0.4), 5);
     } else {

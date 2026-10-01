@@ -54,9 +54,15 @@ export function allSessions() {
 }
 
 /** Totals for one mode, or for everything when `mode` is omitted. */
+/**
+ * Pooled totals. `mode` may be a single mode id, an array of them, or be
+ * omitted for everything. Zener and remote viewing are both 1-in-5, so they
+ * pool cleanly; the chance guard below refuses to pool anything that is not.
+ */
 export function career(mode) {
-  const sessions = read().sessions.filter((s) => !mode || s.mode === mode);
-  if (!sessions.length) return { sessions: [], ...summarize(0, 0, mode === 'rv' ? 0.2 : 0.2), empty: true };
+  const want = mode == null ? null : (Array.isArray(mode) ? mode : [mode]);
+  const sessions = read().sessions.filter((s) => !want || want.includes(s.mode));
+  if (!sessions.length) return { sessions: [], ...summarize(0, 0, 0.2), empty: true };
   // Guard: only pool trials that share a chance level.
   const chance = sessions[0].chance;
   const sameChance = sessions.filter((s) => s.chance === chance);
@@ -67,7 +73,8 @@ export function career(mode) {
 
 /** Running z after each session, for the career graph. */
 export function zTrace(mode) {
-  const sessions = read().sessions.filter((s) => !mode || s.mode === mode);
+  const want = mode == null ? null : (Array.isArray(mode) ? mode : [mode]);
+  const sessions = read().sessions.filter((s) => !want || want.includes(s.mode));
   let t = 0, h = 0;
   return sessions.map((s) => {
     t += s.trials; h += s.hits;

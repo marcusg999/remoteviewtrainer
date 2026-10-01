@@ -24,16 +24,17 @@ function uniformityChi2(counts) {
 
 /** Running z over sessions, drawn as an SVG path with a zero line. */
 function zTraceSvg(trace, w = 520, h = 112) {
-  if (trace.length < 2) return '';
+  if (!trace.length) return '';
   const pad = { l: 26, r: 8, t: 10, b: 16 };
   const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
   const zs = trace.map((p) => p.z);
   const lim = Math.max(3, Math.ceil(Math.max(...zs.map(Math.abs)) + 0.5));
-  const X = (i) => pad.l + (i / (trace.length - 1)) * iw;
+  const X = (i) => (trace.length === 1 ? pad.l + iw / 2 : pad.l + (i / (trace.length - 1)) * iw);
   const Y = (z) => pad.t + ih / 2 - (z / lim) * (ih / 2);
 
   const line = trace.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(p.z).toFixed(1)}`).join('');
-  const area = `${line}L${X(trace.length - 1).toFixed(1)},${Y(0).toFixed(1)}L${X(0).toFixed(1)},${Y(0).toFixed(1)}Z`;
+  const area = trace.length === 1 ? ''
+    : `${line}L${X(trace.length - 1).toFixed(1)},${Y(0).toFixed(1)}L${X(0).toFixed(1)},${Y(0).toFixed(1)}Z`;
   const last = trace[trace.length - 1];
 
   // the +-1.96 band: inside it, a result is ordinary
@@ -83,12 +84,29 @@ function symbolStats(sessions) {
   return { calls, shown, hits, any };
 }
 
+/** Which modes the log is currently pooling. Both are 1-in-5. */
+const VIEWS = [
+  { id: 'all', label: 'All', modes: null },
+  { id: 'zener', label: 'Zener', modes: ['zener', 'zener-closed'] },
+  { id: 'rv', label: 'Remote viewing', modes: ['rv'] },
+];
+let viewId = 'all';
+
 export function renderCareer(host, { onBack, onPlay }) {
-  const c = career('zener');
+  // The log used to read career('zener') only, so a player could run fifty
+  // remote-viewing sessions and be told "No trials recorded yet" while every
+  // one of them sat in storage. Their own record was invisible.
+  const view = VIEWS.find((x) => x.id === viewId) || VIEWS[0];
+  const c = career(view.modes);
   const sessions = c.sessions;
   const v = verdict(c);
-  const trace = zTrace('zener');
+  const trace = zTrace(view.modes);
   const sym = symbolStats(sessions);
+  const counts = {
+    all: allSessions().length,
+    zener: allSessions().filter((s) => s.mode !== 'rv').length,
+    rv: allSessions().filter((s) => s.mode === 'rv').length,
+  };
 
   const bias = uniformityChi2(SYMBOLS.map((s) => sym.calls[s]));
   const biasP = chi2Sf(bias.chi2, bias.df);
@@ -100,53 +118,60 @@ export function renderCareer(host, { onBack, onPlay }) {
       <div class="stat"><div class="k">Sessions</div><div class="v t-mono">${sessions.length}</div></div>
       <div class="stat"><div class="k">Trials</div><div class="v t-mono">${c.trials}</div></div>
       <div class="stat"><div class="k">Hits</div><div class="v t-mono">${c.hits}</div></div>
-      <div class="stat ${c.trials ? (c.z >= 1.96 ? 'good' : c.z <= -1.96 ? 'bad' : '') : ''}">
-        <div class="k">Pooled z</div><div class="v t-mono">${c.trials ? sign(c.z) : '—'}</div></div>
     </div>
 
     <div class="scroll">
       <div class="sheet">
         <h2 class="outlined">Career Log</h2>
+        <div class="viewtabs" role="tablist">
+          ${VIEWS.map((x) => `<button class="vtab${x.id === viewId ? ' on' : ''}" data-view="${x.id}"
+             role="tab" aria-selected="${x.id === viewId}">${x.label}<span class="n">${counts[x.id]}</span></button>`).join('')}
+        </div>
         <p class="lede">${c.empty
           ? 'No trials recorded yet. Run a Zener set and it will appear here.'
           : `Pooled across ${sessions.length} session${sessions.length === 1 ? '' : 's'} at 20% chance. The pooled figure is the one to read.`}</p>
 
         ${c.empty ? `<div class="row"><button class="btn" data-act="play">Run your first set</button></div>` : `
-        <div class="verdict ${v.tone}">${v.label}</div>
+        <div class="verdict ${v.tone}">
+          <span class="vl">${v.label}</span>
+          ${c.trials ? `<span class="vz t-mono">z ${sign(c.z)}</span>` : ''}
+        </div>
 
         <div class="statgrid">
           <div class="cell"><div class="k">Hit rate</div><div class="v">${(c.rate * 100).toFixed(2)}%</div></div>
           <div class="cell"><div class="k">Expected</div><div class="v">${c.expected.toFixed(1)}</div></div>
-          <div class="cell"><div class="k">z-score</div><div class="v">${sign(c.z, 3)}</div></div>
           <div class="cell"><div class="k">Exact p (1-tail)</div><div class="v">${fmtP(c.pExact)}</div></div>
           <div class="cell"><div class="k">p (2-tail)</div><div class="v">${fmtP(c.pTwoTailed)}</div></div>
           <div class="cell"><div class="k">95% CI on rate</div><div class="v">${(c.ci.lo * 100).toFixed(1)}–${(c.ci.hi * 100).toFixed(1)}%</div></div>
         </div>
 
-        ${trace.length > 1 ? `
+        ${trace.length ? `
         <h3 class="sub-h">Running z across sessions</h3>
         <p class="sub-note">The shaded band is the ordinary range. A single lucky set moves this a long way early on and almost nothing later — that is the point of it.</p>
         <div class="chart">${zTraceSvg(trace)}</div>` : ''}
 
-        ${sym.any ? `
+        ${sym.any && view.id !== 'rv' ? `
         <h3 class="sub-h">Your call bias</h3>
         <p class="sub-note">How often you named each symbol, against the 20% a uniform guesser would produce. People are poor random generators, and this is usually the only non-random thing in the room.</p>
         <div class="bias">
           ${SYMBOLS.map((s) => {
             const pct = totalCalls ? (sym.calls[s] / totalCalls) * 100 : 0;
             const dev = pct - 20;
+            // NB: this denominator is target APPEARANCES, not your calls —
+            // "caught 1 of the 3 times Waves came up", not "right a third of
+            // the time I said Waves". The column is labelled accordingly.
             const hitRate = sym.shown[s] ? (sym.hits[s] / sym.shown[s]) * 100 : null;
             return `<div class="bias-row">
               <img class="bias-sym" src="${symbolChip(s)}" alt="${SYMBOL_LABEL[s]}" width="22" height="22">
               <div class="bias-name">${SYMBOL_LABEL[s]}</div>
-              <div class="bias-bar"><i style="width:${Math.min(100, pct * 2.5).toFixed(1)}%"></i><u style="left:50%"></u></div>
+              <div class="bias-bar"><i class="${dev < 0 ? 'neg' : 'pos'}" style="left:${dev < 0 ? (50 - Math.min(50, Math.abs(dev) * 2.5)).toFixed(1) : 50}%;width:${Math.min(50, Math.abs(dev) * 2.5).toFixed(1)}%"></i><u style="left:50%"></u></div>
               <div class="bias-pct t-mono">${pct.toFixed(1)}%</div>
               <div class="bias-dev t-mono ${Math.abs(dev) > 4 ? 'off' : ''}">${sign(dev, 1)}</div>
-              <div class="bias-hit t-mono">${hitRate == null ? '—' : hitRate.toFixed(0) + '%'}</div>
+              <div class="bias-hit t-mono" title="${sym.hits[s]} of the ${sym.shown[s]} times this symbol came up">${hitRate == null ? '—' : `${sym.hits[s]}/${sym.shown[s]}`}</div>
             </div>`;
           }).join('')}
           <div class="bias-head">
-            <span></span><span></span><span>share of your calls</span><span></span><span>vs 20%</span><span>hit rate</span>
+            <span></span><span></span><span>share of your calls</span><span></span><span>vs 20%</span><span>caught when shown</span>
           </div>
         </div>
         <p class="sub-note">
@@ -164,6 +189,7 @@ export function renderCareer(host, { onBack, onPlay }) {
             return `<div class="srow">
               <span class="sdate t-mono">${new Date(s.at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                 ${new Date(s.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span class="smode">${s.mode === 'rv' ? 'RV' : 'Z'}</span>
               <span class="shits t-mono">${s.hits}/${s.trials}</span>
               <span class="sz t-mono ${flag}">${sign(ss.z)}</span>
             </div>`;
@@ -185,6 +211,10 @@ export function renderCareer(host, { onBack, onPlay }) {
     </div>
   `;
 
+  host.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => {
+    viewId = b.dataset.view;
+    renderCareer(host, { onBack, onPlay });
+  }));
   host.querySelector('[data-act="back"]').addEventListener('click', onBack);
   host.querySelectorAll('[data-act="play"]').forEach((b) => b.addEventListener('click', onPlay));
   host.querySelector('[data-act="export"]').addEventListener('click', () => {

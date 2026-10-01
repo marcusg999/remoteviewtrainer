@@ -48,6 +48,10 @@ html,body{
   pointer-events:none;
   overflow:hidden;
 }
+/* The reveal is the loudest moment in the game and must never be covered by
+   chrome. #ui takes no z-index on purpose: it then creates no stacking
+   context, so the result modal below can still out-rank the float layer. */
+#fx{ z-index:45; }
 #ui{ display:flex; flex-direction:column; }
 
 .noscript{ position:fixed; inset:0; display:grid; place-items:center; }
@@ -86,18 +90,18 @@ html,body{
     -3px 0 0 #000, 3px 0 0 #000, 0 -3px 0 #000, 0 3px 0 #000,
     -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
 }
-.float-text[data-kind="hit"]{ color:var(--hit); text-shadow:
+.float-text[data-kind="hit"]{ color:#ccf7da; text-shadow:
   -3px 0 0 #06240f, 3px 0 0 #06240f, 0 -3px 0 #06240f, 0 3px 0 #06240f,
   -3px -3px 0 #06240f, 3px -3px 0 #06240f, -3px 3px 0 #06240f, 3px 3px 0 #06240f,
-  0 7px 0 rgba(0,0,0,.5); }
+  0 7px 0 rgba(0,0,0,.45), 0 0 24px rgba(47,191,106,.7); }
 /* A miss is 80% of outcomes in a five-symbol task, so it is the dominant
    feedback event. It gets the same weight as a hit and differs by colour
    alone — demoting it to half the size made the common case feel like
    nothing happened. */
-.float-text[data-kind="miss"]{ color:#9f93b8; text-shadow:
-  -3px 0 0 #120a1c, 3px 0 0 #120a1c, 0 -3px 0 #120a1c, 0 3px 0 #120a1c,
-  -3px -3px 0 #120a1c, 3px -3px 0 #120a1c, -3px 3px 0 #120a1c, 3px 3px 0 #120a1c,
-  0 7px 0 rgba(0,0,0,.45); }
+.float-text[data-kind="miss"]{ color:#ece4f7; text-shadow:
+  -3px 0 0 #2a1840, 3px 0 0 #2a1840, 0 -3px 0 #2a1840, 0 3px 0 #2a1840,
+  -3px -3px 0 #2a1840, 3px -3px 0 #2a1840, -3px 3px 0 #2a1840, 3px 3px 0 #2a1840,
+  0 7px 0 rgba(0,0,0,.45), 0 0 20px rgba(158,120,214,.6); }
 .float-text .ch{ display:inline-block; will-change:transform; }
 .float-text[data-kind="streak"]{ color:var(--amber); }
 .float-text[data-kind="coord"]{ color:var(--violet); }
@@ -243,6 +247,7 @@ html,body{
 /* ---------- modal / results ---------- */
 .modal{
   position:absolute; inset:0; display:grid; place-items:center;
+  z-index:60;
   background:rgba(4,3,8,.74); backdrop-filter:blur(7px);
   opacity:0; pointer-events:none; transition:opacity .3s ease;
   padding:16px;

@@ -234,7 +234,7 @@ export class Lab {
       color: 0xe8ddc4, roughness: 0.65, emissive: 0x2a1c08, emissiveIntensity: 0.3,
     });
     const flameMat = new THREE.MeshBasicMaterial({
-      color: 0xffe3a8, transparent: true, opacity: 0.98, depthWrite: false,
+      color: 0xf0e0c0, transparent: true, opacity: 0.88, depthWrite: false,
     });
     const glowTex = this._glowTexture();
 

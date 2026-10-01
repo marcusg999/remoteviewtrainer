@@ -175,7 +175,10 @@ export class ZenerRun {
     this.ctx.director.pushIn(0.30, new THREE.Vector3(0, 0.95, -0.5), 9);
     audio.sfxFlip();
 
-    const anchor = new THREE.Vector3(0, 1.62, -0.5);
+    // Beside the card in open felt, NOT above it. Anchored above, this
+    // projects into the HUD band where the stat panels cover its top half
+    // and the trial-dot strip runs straight through the letterforms.
+    const anchor = new THREE.Vector3(-1.15, 1.02, -0.18);
 
     // The reaction fires on the card's LAND, not on the flip's start. Before
     // this, the shake and the burst went off while the card was still edge-on
@@ -187,7 +190,7 @@ export class ZenerRun {
         this.ctx.director.addTrauma(Math.min(0.62, 0.35 + this.streak * 0.07));
         this.ctx.particles.burst(new THREE.Vector3(0, 0.95, -0.5), {
           count: 38 + this.streak * 7,
-          speed: 3.3, spread: 1.5, size: 12, life: 1.0,
+          speed: 3.3, spread: 1.5, size: 0.034, life: 1.0,
           colors: [0x49d17c, 0xe8a33d, 0xfff0cf, 0x9fe8bd],
         });
       } else {
@@ -210,12 +213,12 @@ export class ZenerRun {
       if (this.streak >= 3) {
         await this.ctx.tweens.add({ dur: 0.16 });
         this.ctx.floatText.spawn(
-          new THREE.Vector3(1.05, 1.95, -0.5), `${this.streak} IN A ROW`,
+          new THREE.Vector3(1.2, 1.12, -0.18), `${this.streak} IN A ROW`,
           { kind: 'streak', dur: 0.75, drift: 0.8 }
         );
         this.ctx.director.addTrauma(0.14);
-        this.ctx.particles.burst(new THREE.Vector3(0.9, 1.5, -0.5), {
-          count: 18 + this.streak * 4, speed: 2.4, spread: 1.8, size: 9, life: 0.8,
+        this.ctx.particles.burst(new THREE.Vector3(1.1, 1.1, -0.2), {
+          count: 18 + this.streak * 4, speed: 2.4, spread: 1.8, size: 0.026, life: 0.8,
           colors: [0xe8a33d, 0xfff0cf],
         });
       }

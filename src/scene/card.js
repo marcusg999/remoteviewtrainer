@@ -16,8 +16,25 @@ export const CARD_W = 1.0;
 export const CARD_H = CARD_W * CARD_ASPECT;
 const THICK = 0.014;
 
-/** Fraction of the flip at which the card is considered to have landed. */
-const LAND_AT = 0.78;
+/**
+ * Fraction of the flip at which the card has actually touched down.
+ *
+ * This was 0.78, which put the punch's peak about 100ms before the card
+ * reached the table — at the peak the card was still a quarter unit in the
+ * air and descending, and by the time it landed the punch had decayed away.
+ * That is the same mistake as the original sin(pi*t) arc, just moved later:
+ * the impulse spent on a frame where it means nothing.
+ */
+const LAND_AT = 0.94;
+
+/**
+ * The house punch curve, shared by the flip landing and the score pop.
+ * It runs on its OWN clock rather than inside the flip's remaining fraction —
+ * nesting it there gave it (1 - LAND_AT) * dur, which at 340ms was 75ms, less
+ * than five frames.
+ */
+const PUNCH_DUR = 0.18;
+const punchAt = (k) => easeOutBack(k, 3.4) * (1 - k);
 
 /** Textures are shared across every card — 25 canvases would be absurd. */
 const texCache = new Map();
@@ -95,6 +112,7 @@ export class Card {
   /** Tint a retired card so the row reads as a record of the run. */
   setOutcome(hit) {
     this.outcome = hit;
+    this.outcomeSet = true;   // stop the flip's brighten-into-land ramp
     const front = this.mesh.material[4];
     if (hit) {
       front.emissive = new THREE.Color(0x2fbf6a);
@@ -167,21 +185,36 @@ export class Card {
 
       // the land punch: nothing until the spin has resolved, then the card
       // slams past its rest scale and settles back
-      if (t >= LAND_AT) {
-        const k = clamp01((t - LAND_AT) / (1 - LAND_AT));
-        this.flipScale = 1 + easeOutBack(k, 3.4) * 0.14 * (1 - k);
-        if (!this.landed) { this.landed = true; this.onLand?.(); }
-      } else {
-        this.flipScale = 1;
+      // The face brightens into the landing. easeOutQuint finishes the spin
+      // early, which otherwise leaves the card hanging with nothing happening.
+      const front = this.mesh.material[4];
+      if (!this.outcomeSet) {
+        const glow = t < 0.45 ? 0 : t < LAND_AT
+          ? (t - 0.45) / (LAND_AT - 0.45) * 0.45
+          : 0.45 - ((t - LAND_AT) / (1 - LAND_AT)) * 0.27;
+        front.emissive.setHex(0xffd9a0);
+        front.emissiveIntensity = Math.max(0, glow);
+      }
+
+      if (t >= LAND_AT && !this.landed) {
+        this.landed = true;
+        this.landT = 0;          // punch starts here, on its own clock
+        this.onLand?.();
       }
 
       if (this.flipT >= 1) {
         this.flipping = false;
         this.flipArc = 0;
-        this.flipScale = 1;
-        // guard: a very long frame could skip past LAND_AT entirely
-        if (!this.landed) { this.landed = true; this.onLand?.(); }
+        if (!this.landed) { this.landed = true; this.landT = 0; this.onLand?.(); }
       }
+    }
+
+    // land punch — runs past the end of the flip, so it gets its full window
+    if (this.landT != null) {
+      this.landT += dt;
+      const k = clamp01(this.landT / PUNCH_DUR);
+      this.flipScale = 1 + punchAt(k) * 0.14;
+      if (k >= 1) { this.landT = null; this.flipScale = 1; }
     }
 
     // smoothed hover state
@@ -193,12 +226,10 @@ export class Card {
     // score pop
     let popScale = 1, popLift = 0;
     if (this.popT > 0) {
-      this.popT += dt / 0.42;
+      this.popT += dt / PUNCH_DUR;
       if (this.popT >= 1) { this.popT = 0; }
       else {
-        const p = this.popT;
-        // fast out, elastic-ish settle
-        const punch = p < 0.22 ? easeOutBack(p / 0.22, 3.2) : 1 - easeOutCubic((p - 0.22) / 0.78);
+        const punch = punchAt(this.popT);
         popScale = 1 + punch * 0.17;
         popLift = punch * 0.16;
       }

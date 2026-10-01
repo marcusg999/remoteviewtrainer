@@ -16,7 +16,14 @@ const VERT = `
   attribute vec3 aColor;
   attribute float aSpin;
   uniform float uTime;
-  uniform float uPixelRatio;
+  /**
+   * Pixels per world unit at one unit from the camera:
+   *   viewportHeightInDevicePx / (2 * tan(fov / 2))
+   * Divided by view-space depth this gives a particle's true projected size.
+   * The previous version used a hand-tuned constant that had never been
+   * calibrated to this scene's scale and produced ~693px particles.
+   */
+  uniform float uScale;
   varying float vAge;
   varying vec3 vColor;
   varying float vSpin;
@@ -31,7 +38,7 @@ const VERT = `
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     float shrink = 1.0 - age * age;
-    gl_PointSize = aSize * shrink * uPixelRatio * (260.0 / -mv.z);
+    gl_PointSize = aSize * shrink * uScale / max(-mv.z, 0.1);
   }
 `;
 
@@ -51,7 +58,8 @@ const FRAG = `
 `;
 
 export class Particles {
-  constructor(scene, pixelRatio = 1) {
+  /** @param {THREE.PerspectiveCamera} camera used to derive the size scale */
+  constructor(scene, camera, renderer) {
     this.n = MAX;
     this.cursor = 0;
     this.time = 0;
@@ -74,8 +82,10 @@ export class Particles {
     g.setAttribute('aSpin', new THREE.BufferAttribute(spin, 1));
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 60);
 
+    this.camera = camera;
+    this.renderer = renderer;
     this.mat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 }, uPixelRatio: { value: pixelRatio } },
+      uniforms: { uTime: { value: 0 }, uScale: { value: 1000 } },
       vertexShader: VERT, fragmentShader: FRAG,
       transparent: true, depthWrite: false, blending: THREE.NormalBlending,
     });
@@ -95,7 +105,7 @@ export class Particles {
     const speed = o.speed ?? 2.6;
     const spread = o.spread ?? 1.0;
     const colors = o.colors ?? [0xffd27f, 0xff8a5c, 0xfff2d0];
-    const size = o.size ?? 9;
+    const size = o.size ?? 0.028;   // world units
     const life = o.life ?? 0.9;
     const up = o.up ?? 1.4;
 
@@ -128,6 +138,16 @@ export class Particles {
     for (const k of ['position', 'aVel', 'aColor', 'aBirth', 'aLife', 'aSize', 'aSpin']) {
       a[k].needsUpdate = true;
     }
+  }
+
+  /** Recompute the projection scale. Call on resize and on any fov change. */
+  resize() {
+    if (!this.camera || !this.renderer) return;
+    const size = this.renderer.getSize(new THREE.Vector2());
+    const dpr = this.renderer.getPixelRatio();
+    const h = size.y * dpr;
+    const fov = (this.camera.fov * Math.PI) / 180;
+    this.mat.uniforms.uScale.value = h / (2 * Math.tan(fov / 2));
   }
 
   update(dt) {

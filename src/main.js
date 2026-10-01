@@ -41,7 +41,7 @@ const uiLayer = document.getElementById('ui');
 const quality = detectQuality();
 const lab = new Lab(canvas, quality);
 const tweens = new Tweens();
-const particles = new Particles(lab.scene, Math.min(devicePixelRatio || 1, 2));
+const particles = new Particles(lab.scene, lab.camera, lab.renderer);
 const floatText = new FloatText(fxLayer, lab.camera);
 const director = new CameraDirector(
   lab.camera,
@@ -58,6 +58,7 @@ lab.onLayout = (_layout, rig) => {
   director.zoomFocus.copy(rig.target);
 };
 lab.resize();
+particles.resize();
 
 let run = null;
 let screen = 'title';
@@ -261,7 +262,7 @@ async function finishZener() {
   director.addTrauma(rep.z >= 1.64 ? 0.5 : 0.15);
   if (rep.z >= 1.64) {
     particles.burst(new THREE.Vector3(0, 1.0, 0), {
-      count: 120, speed: 4.4, spread: 2.0, size: 13, life: 1.5,
+      count: 120, speed: 4.4, spread: 2.0, size: 0.038, life: 1.5,
       colors: [0x49d17c, 0xe8a33d, 0xfff0cf, 0x2b9ae8],
     });
   }
@@ -438,8 +439,8 @@ addEventListener('pointermove', (e) => {
   if (run?.active) run.active.aimAt(nx * 0.5, ny * 0.4);
 });
 
-addEventListener('resize', () => lab.resize());
-addEventListener('orientationchange', () => setTimeout(() => lab.resize(), 200));
+addEventListener('resize', () => { lab.resize(); particles.resize(); });
+addEventListener('orientationchange', () => setTimeout(() => { lab.resize(); particles.resize(); }, 200));
 
 /* ---------- loop ---------- */
 let last = performance.now();

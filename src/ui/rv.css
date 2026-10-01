@@ -1,0 +1,456 @@
+/* ---------------------------------------------------------------
+   Remote viewing — stage UI.
+
+   Every selector here is scoped under a .rv- prefix so it cannot
+   collide with styles.css or with the Zener screen. Colours come from
+   the :root variables in styles.css; each var() carries the literal
+   fallback so this sheet still renders correctly if it is ever loaded
+   on its own (the play-test harness does exactly that).
+   --------------------------------------------------------------- */
+
+.rv-root{
+  --rv-amber:var(--amber,#e8a33d);
+  --rv-brass:var(--brass,#c9a26a);
+  --rv-ink:var(--ink,#f5ecd9);
+  --rv-dim:var(--ink-dim,#a79cb4);
+  --rv-faint:var(--ink-faint,#6d6480);
+  --rv-panel:var(--panel,#171320);
+  --rv-panel-2:var(--panel-2,#1f1a2b);
+  --rv-lip:var(--panel-lip,#0d0a14);
+  --rv-line:var(--line,#3a3048);
+  --rv-hit:var(--hit,#49d17c);
+  --rv-miss:var(--miss,#e0574c);
+  --rv-violet:var(--violet,#8d6bd8);
+
+  position:relative;
+  display:flex; flex-direction:column; gap:10px;
+  width:100%; height:100%; min-height:0;
+  color:var(--rv-ink);
+  font-family:var(--font, ui-sans-serif, system-ui, sans-serif);
+}
+
+/* ---------- header: the coordinate and the seal ---------- */
+.rv-head{
+  display:flex; align-items:stretch; gap:10px; flex:0 0 auto;
+}
+.rv-coord{
+  flex:1 1 auto; min-width:0;
+  background:linear-gradient(180deg,var(--rv-panel-2),var(--rv-panel));
+  border:2px solid var(--rv-line); border-radius:12px;
+  box-shadow:0 5px 0 var(--rv-lip);
+  padding:7px 12px 9px;
+  display:flex; flex-direction:column; align-items:center;
+}
+.rv-coord-k{
+  font-size:9.5px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--rv-faint); font-weight:800;
+}
+.rv-coord-v{
+  font-size:clamp(22px,7vw,34px); font-weight:900; line-height:1.1;
+  letter-spacing:.09em; color:var(--rv-amber);
+  font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+  text-shadow:0 2px 0 rgba(0,0,0,.6);
+}
+.rv-seal{
+  flex:0 0 auto; display:flex; flex-direction:column; justify-content:center; gap:2px;
+  background:rgba(0,0,0,.3); border:1px solid var(--rv-line); border-radius:12px;
+  padding:7px 11px; max-width:44%;
+}
+.rv-seal .rv-seal-k{
+  font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--rv-faint); font-weight:800;
+}
+.rv-seal code{
+  font-size:11px; color:var(--rv-brass); font-weight:800;
+  word-break:break-all; line-height:1.3;
+}
+
+/* ---------- the stage rail ---------- */
+.rv-rail{
+  display:flex; gap:6px; flex:0 0 auto; list-style:none; margin:0; padding:0;
+}
+.rv-rail-item{
+  flex:1 1 0; min-width:0;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:5px 2px 6px;
+  border-radius:10px; border:1px solid transparent;
+}
+.rv-rail-bar{
+  width:100%; height:6px; border-radius:3px;
+  background:#2a2336; border:1px solid var(--rv-lip);
+}
+.rv-rail-label{
+  font-size:8.5px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--rv-faint); font-weight:800; text-align:center;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+}
+.rv-rail-item.done .rv-rail-bar{ background:var(--rv-brass); }
+.rv-rail-item.done .rv-rail-label{ color:var(--rv-dim); }
+.rv-rail-item.now .rv-rail-bar{ background:var(--rv-amber); box-shadow:0 0 10px rgba(232,163,61,.55); }
+.rv-rail-item.now .rv-rail-label{ color:var(--rv-amber); }
+
+/* ---------- stages ---------- */
+.rv-stages{
+  position:relative; flex:1 1 auto; min-height:0;
+  display:flex; flex-direction:column;
+}
+.rv-stage{
+  display:none; flex-direction:column; gap:10px;
+  flex:1 1 auto; min-height:0;
+  overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-right:2px;
+}
+.rv-stage.on{ display:flex; animation:rv-in .26s ease both; }
+
+/* Two stages (ideogram, ranking) have no growing child, so on a tall screen
+   their content would sit against the top with a dead gap underneath. These
+   flex spacers centre it. They have flex-basis 0 and can shrink away, so when
+   the content is taller than the stage it simply scrolls from the top as
+   usual — which is what a phone does. */
+.rv-stage[data-stage="ideogram"]::before,
+.rv-stage[data-stage="ideogram"]::after,
+.rv-stage[data-stage="ranking"]::before,
+.rv-stage[data-stage="ranking"]::after{
+  content:""; flex:1 1 0; min-height:0;
+}
+@keyframes rv-in{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+
+.rv-title{
+  margin:0; font-size:clamp(17px,4.6vw,23px); font-weight:900; letter-spacing:.03em;
+  text-transform:uppercase; color:var(--rv-ink);
+}
+.rv-title small{
+  display:block; margin-top:3px;
+  font-size:10px; letter-spacing:.2em; color:var(--rv-brass); font-weight:800;
+}
+.rv-lede{
+  margin:0; color:var(--rv-dim); font-size:13.5px; line-height:1.55; max-width:62ch;
+}
+.rv-lede b{ color:var(--rv-ink); }
+
+/* ---------- sketch pads ---------- */
+.rv-pad{
+  position:relative; flex:0 0 auto;
+  border:2px solid var(--rv-line); border-radius:14px;
+  background:#120f1b;
+  box-shadow:inset 0 2px 14px rgba(0,0,0,.6), 0 5px 0 var(--rv-lip);
+  overflow:hidden;
+}
+.rv-pad-canvas{
+  display:block; width:100%; height:100%;
+  /* The whole point: a drawing gesture must not scroll or zoom the page. */
+  touch-action:none;
+  -ms-touch-action:none;
+  -webkit-user-select:none; user-select:none;
+  cursor:crosshair;
+}
+.rv-pad.rv-ideogram{ flex:1 1 auto; min-height:clamp(200px,32vh,340px); }
+.rv-pad.rv-sketch{ flex:1 1 auto; min-height:clamp(180px,34vh,420px); }
+.rv-pad::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  border-radius:12px;
+  box-shadow:inset 0 0 0 1px rgba(201,162,106,.14);
+}
+.rv-padtools{ display:flex; gap:8px; flex:0 0 auto; flex-wrap:wrap; }
+.rv-padbtn{ min-height:44px; }
+
+/* ---------- the ideogram timer ---------- */
+.rv-timer{
+  flex:0 0 auto; height:8px; border-radius:4px; overflow:hidden;
+  background:#241d30; border:1px solid var(--rv-lip);
+}
+.rv-timer-fill{
+  height:100%; width:100%;
+  background:linear-gradient(90deg,var(--rv-amber),var(--rv-brass));
+  transform-origin:left center;
+  transition:transform .1s linear;
+}
+.rv-timer.spent .rv-timer-fill{ background:var(--rv-miss); }
+.rv-countdown{
+  text-align:center; font-weight:900; font-variant-numeric:tabular-nums;
+  font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--rv-faint);
+}
+.rv-countdown b{ color:var(--rv-amber); font-size:15px; }
+
+/* ---------- sensory stage ---------- */
+.rv-cats{ display:flex; flex-direction:column; gap:9px; }
+.rv-cat{
+  background:linear-gradient(180deg,var(--rv-panel-2),var(--rv-panel));
+  border:2px solid var(--rv-line); border-radius:12px;
+  box-shadow:0 4px 0 var(--rv-lip);
+  padding:9px 11px 11px;
+}
+.rv-cat-head{
+  display:flex; align-items:baseline; gap:8px; margin-bottom:8px;
+}
+.rv-cat-name{
+  font-size:10px; letter-spacing:.19em; text-transform:uppercase;
+  font-weight:900; color:var(--rv-brass);
+}
+.rv-cat-count{
+  margin-left:auto; font-size:10px; font-weight:900; color:var(--rv-faint);
+  font-variant-numeric:tabular-nums;
+}
+.rv-cat-count.has{ color:var(--rv-amber); }
+.rv-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.rv-chip{
+  appearance:none; cursor:pointer;
+  min-height:44px; padding:7px 12px;
+  border-radius:999px; border:2px solid var(--rv-line);
+  background:rgba(0,0,0,.28);
+  color:var(--rv-dim); font-family:inherit;
+  font-size:12.5px; font-weight:800; letter-spacing:.02em;
+  transition:transform .08s ease, border-color .12s, color .12s, background .12s;
+}
+.rv-chip:hover{ border-color:var(--rv-brass); color:var(--rv-ink); }
+.rv-chip:active{ transform:translateY(2px); }
+.rv-chip.on{
+  background:linear-gradient(180deg,#3a2c17,#241a0d);
+  border-color:var(--rv-amber); color:var(--rv-amber);
+  box-shadow:0 0 14px rgba(232,163,61,.3);
+}
+.rv-chip.rv-own{ border-style:dashed; }
+.rv-chip.rv-own.on{ border-style:solid; }
+.rv-freerow{ display:flex; gap:7px; margin-top:8px; }
+.rv-free{
+  flex:1 1 auto; min-width:0; min-height:44px;
+  background:rgba(0,0,0,.38); color:var(--rv-ink);
+  border:2px solid var(--rv-line); border-radius:10px;
+  padding:9px 11px; font-family:inherit; font-size:14px; font-weight:600;
+}
+.rv-free::placeholder{ color:var(--rv-faint); }
+.rv-free:focus{ outline:none; border-color:var(--rv-amber); }
+.rv-add{ flex:0 0 auto; min-height:44px; min-width:52px; }
+
+/* ---------- ranking stage ---------- */
+.rv-grid{
+  display:grid; gap:9px;
+  grid-template-columns:repeat(auto-fit,minmax(132px,1fr));
+}
+.rv-cand{
+  position:relative; cursor:pointer; appearance:none; padding:0;
+  background:linear-gradient(180deg,var(--rv-panel-2),var(--rv-panel));
+  border:2px solid var(--rv-line); border-radius:13px;
+  box-shadow:0 5px 0 var(--rv-lip);
+  overflow:hidden; text-align:left;
+  transition:transform .09s ease, border-color .12s, box-shadow .09s;
+}
+.rv-cand:hover{ transform:translateY(-3px); border-color:var(--rv-brass); box-shadow:0 8px 0 var(--rv-lip); }
+.rv-cand:active{ transform:translateY(2px); box-shadow:0 2px 0 var(--rv-lip); }
+.rv-cand-canvas{
+  display:block; width:100%; aspect-ratio:4/3; background:#0c0a12;
+  border-bottom:2px solid var(--rv-line);
+}
+.rv-cand-name{
+  display:block; padding:7px 9px 9px;
+  font-size:11.5px; font-weight:900; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--rv-dim); line-height:1.25;
+}
+.rv-cand-rank{
+  position:absolute; top:7px; left:7px;
+  width:30px; height:30px; border-radius:9px;
+  display:grid; place-items:center;
+  font-size:15px; font-weight:900; font-variant-numeric:tabular-nums;
+  background:rgba(8,6,14,.34); border:2px solid rgba(255,255,255,.14);
+  color:transparent;
+  transition:background .14s, border-color .14s, color .14s, transform .12s;
+}
+.rv-cand:hover .rv-cand-rank{ background:rgba(8,6,14,.6); border-color:rgba(255,255,255,.28); }
+.rv-cand.ranked{ border-color:var(--rv-brass); }
+.rv-cand.ranked .rv-cand-name{ color:var(--rv-ink); }
+.rv-cand.ranked .rv-cand-rank{ background:#2a2336; border-color:var(--rv-brass); color:var(--rv-ink); transform:scale(1.06); }
+.rv-cand.first{
+  border-color:var(--rv-amber);
+  box-shadow:0 5px 0 #4a3310, 0 0 22px rgba(232,163,61,.4);
+}
+.rv-cand.first .rv-cand-rank{
+  background:linear-gradient(180deg,#f0b652,var(--rv-amber));
+  border-color:#8f5f14; color:#1a1208;
+}
+.rv-cand.first .rv-cand-name{ color:var(--rv-amber); }
+.rv-cand.rv-true{ border-color:var(--rv-hit); box-shadow:0 5px 0 #17502f, 0 0 22px rgba(73,209,124,.4); }
+.rv-cand.rv-true .rv-cand-name{ color:var(--rv-hit); }
+.rv-cand.rv-dim{ opacity:.52; }
+.rv-cand[disabled]{ pointer-events:none; }
+
+.rv-ranknote{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  font-weight:800; color:var(--rv-faint);
+}
+.rv-ranknote b{ color:var(--rv-amber); }
+
+/* ---------- footer ---------- */
+.rv-foot{
+  flex:0 0 auto; display:flex; flex-direction:column; gap:8px;
+  padding-top:2px;
+}
+.rv-hint{
+  text-align:center; color:var(--rv-faint);
+  font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:800;
+  margin:0; min-height:14px;
+}
+.rv-actions{ display:flex; gap:9px; }
+.rv-actions .btn{ flex:1 1 auto; min-height:50px; }
+.rv-actions .btn.rv-back{ flex:0 0 auto; min-width:84px; }
+
+/* ---------- review / reveal blocks (used inside the result modal) ---------- */
+.rv-reveal{ display:flex; flex-direction:column; gap:10px; }
+.rv-reveal-art{
+  width:100%; aspect-ratio:16/10; display:block;
+  border:2px solid var(--rv-line); border-radius:13px; background:#0c0a12;
+  box-shadow:0 6px 0 var(--rv-lip);
+}
+.rv-reveal-name{
+  margin:0; font-size:clamp(18px,5vw,25px); font-weight:900; letter-spacing:.02em;
+}
+.rv-reveal-desc{ margin:0; color:var(--rv-dim); font-size:13.5px; line-height:1.55; }
+.rv-sidebyside{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.rv-sidebyside figure{ margin:0; }
+.rv-sidebyside img{
+  display:block; width:100%; border:2px solid var(--rv-line); border-radius:11px;
+  background:#120f1b;
+}
+.rv-sidebyside figcaption{
+  margin-top:4px; font-size:9px; letter-spacing:.17em; text-transform:uppercase;
+  color:var(--rv-faint); font-weight:800; text-align:center;
+}
+.rv-tags{ display:flex; flex-wrap:wrap; gap:5px; }
+.rv-tag{
+  font-size:10.5px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--rv-dim); background:rgba(0,0,0,.3);
+  border:1px solid var(--rv-line); border-radius:999px; padding:3px 9px;
+}
+.rv-tag.match{ color:var(--rv-hit); border-color:#245c3b; background:rgba(73,209,124,.12); }
+
+.rv-fine{
+  color:var(--rv-faint); font-size:11px; line-height:1.6;
+  border-top:1px solid var(--rv-line); padding-top:9px; margin:0;
+}
+.rv-fine code{
+  background:rgba(0,0,0,.4); padding:1px 5px; border-radius:4px;
+  font-size:10.5px; color:var(--rv-brass); word-break:break-all;
+}
+
+/* ---------- wide screens: keep a readable column, not a 1600px pad ---------- */
+@media (min-width:900px){
+  .rv-stage > *{ width:100%; max-width:1040px; margin-inline:auto; }
+  .rv-pad.rv-ideogram{ min-height:clamp(220px,30vh,320px); }
+}
+
+/* ---------- narrow screens ---------- */
+@media (max-width:420px){
+  .rv-root{ gap:8px; }
+  .rv-seal{ max-width:40%; }
+  .rv-seal code{ font-size:10px; }
+  .rv-grid{ grid-template-columns:repeat(auto-fit,minmax(104px,1fr)); gap:7px; }
+  .rv-cand-name{ font-size:10px; padding:6px 7px 8px; }
+  .rv-cand-rank{ width:26px; height:26px; font-size:13px; border-radius:8px; }
+  .rv-rail-label{ font-size:7.5px; letter-spacing:.08em; }
+  .rv-sidebyside{ grid-template-columns:1fr; }
+}
+@media (prefers-reduced-motion: reduce){
+  .rv-stage.on{ animation:none; }
+}
+
+
+/* The ideogram stage used its centring spacers to push a small pad into the
+   middle of a mostly empty screen. The pad takes that space instead. */
+.rv-stage[data-stage="ideogram"]::before,
+.rv-stage[data-stage="ideogram"]::after{ flex:0 1 0; }
+
+/* The sticky footer was drawing over the last card in the scroll region —
+   at 390px the hint text collided with the TEMPERATURE header. */
+.rv-scroll{ padding-bottom:84px; }
+
+/* ---------------------------------------------------------------
+   Ranking stage: the viewer's own evidence, carried forward.
+   Ranking is the one moment two things must be compared, and the
+   stage used to show only the candidates.
+   --------------------------------------------------------------- */
+.rv-evidence{
+  position:sticky; top:0; z-index:4;
+  max-height:96px; overflow-y:auto;
+  display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;
+  padding:10px 12px; margin:0 0 10px;
+  background:rgba(12,10,18,.92);
+  border:1px solid var(--rv-line, #322a42); border-radius:10px;
+}
+.rv-ev-shot{ margin:0; flex:0 0 auto; text-align:center; }
+.rv-ev-shot img{
+  display:block; border-radius:6px; border:1px solid var(--rv-line, #322a42);
+  background:transparent; object-fit:cover; object-position:center;
+}
+.rv-ev-shot figcaption{
+  font-family:var(--mono, monospace); font-size:8.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-faint, #6d6480); margin-top:4px;
+}
+.rv-ev-words{ display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start; flex:1 1 140px; min-width:0; }
+.rv-ev-word{
+  font-size:11px; font-weight:700; color:var(--brass, #c9a26a);
+  background:rgba(201,162,106,.12); border:1px solid rgba(201,162,106,.3);
+  border-radius:999px; padding:2px 8px; white-space:nowrap;
+}
+.rv-ev-empty{ margin:0; font-size:12px; color:var(--ink-faint, #6d6480); }
+@media (max-width:520px){
+  .rv-evidence{ gap:8px; padding:8px; }
+  .rv-ev-shot img{ width:72px; height:54px; }
+  .rv-ev-shot:nth-of-type(2) img{ width:88px; height:66px; }
+}
+
+/* The rank state sits on its own line rather than trailing a separator that
+   orphans when the hint above it wraps. */
+.rv-rankstate{ display:block; margin-top:3px; }
+
+/* ---------------------------------------------------------------
+   The ideogram pad tells you its own state.
+
+   The window used to drain on a progress bar while the paper itself
+   looked identical at second 9 and second 1. It warms as the window
+   runs out, then settles shut.
+   --------------------------------------------------------------- */
+.rv-pad{ transition:border-color .4s ease-out, box-shadow .4s ease-out; }
+.rv-pad.closing{
+  border-color:#e8a33d;
+  box-shadow:0 0 0 1px rgba(232,163,61,.3), 0 0 18px rgba(232,163,61,.18);
+}
+.rv-pad.spent{
+  border-color:rgba(232,163,61,.35);
+  box-shadow:none;
+  animation:padSettle .18s ease-out;
+}
+@keyframes padSettle{
+  0%   { transform:scaleY(1); }
+  45%  { transform:scaleY(.985); }
+  100% { transform:scaleY(1); }
+}
+
+/* UNDO and CLEAR live in the pad's CHROME, not on its surface.
+   Below the pad they sat under a phone user's drawing hand, and raising
+   them to a 44px target pushed them further under it. Overlaying them on
+   the canvas was worse: the stage asks for one fast reflexive stroke, and
+   a stroke that wanders top-right would land on CLEAR — destroying the
+   only ideogram, inside a nine-second window, with no undo for a clear.
+   They now occupy a strip above the canvas, so the whole surface stays
+   drawable. */
+.rv-padwrap{
+  position:relative;
+  display:flex; flex-direction:column; gap:6px;
+  flex:1 1 auto; min-height:0;
+}
+.rv-padtools{
+  display:flex; gap:6px; margin:0;
+  justify-content:flex-end;
+  flex:0 0 auto;
+  order:-1;                 /* above the canvas, never over it */
+}
+.rv-padtools .rv-padbtn{ min-height:44px; min-width:62px; }
+
+/* Belt and braces: if a stroke is in flight the tools cannot take the
+   pointer, whatever the layout does at some width I have not tested. */
+.rv-padwrap.drawing .rv-padtools{ opacity:.25; pointer-events:none; }
+.rv-padtools{ transition:opacity .18s ease; }
+@media (prefers-reduced-motion: reduce){
+  .rv-pad.spent{ animation:none; }
+}

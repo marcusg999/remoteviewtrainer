@@ -1,0 +1,466 @@
+/* ---------------------------------------------------------------
+   Ganzfeld — a dim lab. Warm light on cold dark, heavy outlined
+   type, and controls big enough for a thumb.
+   --------------------------------------------------------------- */
+
+:root{
+  --bg:#07060d;
+  --panel:#171320;
+  --panel-2:#1f1a2b;
+  --panel-lip:#0d0a14;
+  --line:#3a3048;
+  --ink:#f5ecd9;
+  --ink-dim:#a79cb4;
+  --ink-faint:#6d6480;
+  --amber:#e8a33d;
+  --brass:#c9a26a;
+  --hit:#49d17c;
+  --miss:#e0574c;
+  --chips:#2b9ae8;
+  --mult:#ef4a44;
+  --violet:#8d6bd8;
+
+  --r:14px;
+  --shadow:0 10px 0 var(--panel-lip), 0 16px 34px rgba(0,0,0,.6);
+  --font: "Archivo", ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+
+html,body{
+  margin:0; padding:0; height:100%; width:100%;
+  background:var(--bg); color:var(--ink);
+  font-family:var(--font);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;
+  touch-action:manipulation;
+}
+
+#scene{ position:fixed; inset:0; width:100%; height:100%; display:block; }
+
+.layer{
+  position:fixed; inset:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+/* The reveal is the loudest moment in the game and must never be covered by
+   chrome. #ui takes no z-index on purpose: it then creates no stacking
+   context, so the result modal below can still out-rank the float layer. */
+#fx{ z-index:45; }
+#ui{ display:flex; flex-direction:column; }
+
+.noscript{ position:fixed; inset:0; display:grid; place-items:center; }
+
+/* ---------- type ---------- */
+.t-mono{
+  font-family:var(--mono);
+  font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1;
+  letter-spacing:-.02em;
+}
+
+.outlined{
+  font-weight:900;
+  letter-spacing:.02em;
+  text-shadow:
+    -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000,
+    -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+    0 5px 0 rgba(0,0,0,.55);
+}
+
+/* ---------- floating score text ---------- */
+.float-text{
+  position:absolute; top:0; left:0;
+  will-change:transform,opacity;
+  font-family:var(--mono);
+  font-weight:700;
+  /* The reference's floating text has a cap height around 5% of screen
+     height at 1080p. Clamping at 46px made ours a label where theirs is an
+     event. */
+  font-size:clamp(28px, 5.4vw, 72px);
+  letter-spacing:.01em;
+  white-space:nowrap;
+  pointer-events:none;
+  font-variant-numeric:tabular-nums;
+  text-shadow:
+    -3px 0 0 #000, 3px 0 0 #000, 0 -3px 0 #000, 0 3px 0 #000,
+    -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
+}
+.float-text[data-kind="hit"]{ color:#ccf7da; text-shadow:
+  -3px 0 0 #06240f, 3px 0 0 #06240f, 0 -3px 0 #06240f, 0 3px 0 #06240f,
+  -3px -3px 0 #06240f, 3px -3px 0 #06240f, -3px 3px 0 #06240f, 3px 3px 0 #06240f,
+  0 7px 0 rgba(0,0,0,.45), 0 0 24px rgba(47,191,106,.7); }
+/* A miss is 80% of outcomes in a five-symbol task, so it is the dominant
+   feedback event. It gets the same weight as a hit and differs by colour
+   alone — demoting it to half the size made the common case feel like
+   nothing happened. */
+.float-text[data-kind="miss"]{ color:#ece4f7; text-shadow:
+  -3px 0 0 #2a1840, 3px 0 0 #2a1840, 0 -3px 0 #2a1840, 0 3px 0 #2a1840,
+  -3px -3px 0 #2a1840, 3px -3px 0 #2a1840, -3px 3px 0 #2a1840, 3px 3px 0 #2a1840,
+  0 7px 0 rgba(0,0,0,.45), 0 0 20px rgba(158,120,214,.6); }
+.float-text .ch{ display:inline-block; will-change:transform; }
+.float-text[data-kind="streak"]{ color:var(--amber); }
+.float-text[data-kind="coord"]{ color:var(--violet); }
+
+/* ---------- panels ---------- */
+.panel{
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:2px solid var(--line);
+  border-radius:var(--r);
+  box-shadow:var(--shadow);
+}
+
+/* ---------- buttons ---------- */
+.btn{
+  pointer-events:auto;
+  appearance:none; border:2px solid rgba(0,0,0,.55);
+  border-radius:12px;
+  padding:14px 22px;
+  font-family:inherit; font-weight:900; font-size:16px;
+  letter-spacing:.04em; text-transform:uppercase;
+  color:#1a1208;
+  background:linear-gradient(180deg,#f0b652,var(--amber));
+  box-shadow:0 5px 0 #8f5f14, 0 10px 18px rgba(0,0,0,.45);
+  cursor:pointer;
+  transition:transform .07s ease, box-shadow .07s ease, filter .12s ease;
+  user-select:none;
+}
+.btn:hover{ filter:brightness(1.07); transform:translateY(-1px); box-shadow:0 6px 0 #8f5f14, 0 12px 22px rgba(0,0,0,.5); }
+.btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #8f5f14, 0 4px 10px rgba(0,0,0,.45); }
+.btn[disabled]{ opacity:.42; pointer-events:none; filter:grayscale(.5); }
+
+.btn.ghost{
+  color:var(--ink); background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border-color:var(--line); box-shadow:0 5px 0 var(--panel-lip), 0 10px 18px rgba(0,0,0,.4);
+}
+.btn.ghost:hover{ border-color:var(--brass); }
+.btn.ghost:active{ box-shadow:0 1px 0 var(--panel-lip); }
+
+.btn.small{ padding:9px 14px; font-size:13px; border-radius:10px; box-shadow:0 4px 0 var(--panel-lip); }
+
+/* ---------- screens ---------- */
+.screen{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  padding:calc(14px + var(--safe-t)) 14px calc(14px + var(--safe-b));
+  opacity:0; pointer-events:none;
+  transition:opacity .28s ease;
+}
+.screen.on{ opacity:1; pointer-events:auto; }
+.screen.on.pass-through{ pointer-events:none; }
+.screen.on.pass-through > *{ pointer-events:auto; }
+
+/* ---------- title ---------- */
+#title{ align-items:center; justify-content:center; gap:10px; text-align:center;
+  background:radial-gradient(ellipse at 50% 42%, rgba(12,9,20,.3), rgba(4,3,8,.86)); }
+#title h1{
+  margin:0; font-size:clamp(40px,10vw,84px); line-height:.95;
+  color:var(--ink); letter-spacing:.04em; font-weight:900;
+}
+#title .sub{ font-family:var(--mono); color:var(--brass); font-size:clamp(11px,2.4vw,13px); letter-spacing:.3em; text-transform:uppercase; margin:0 0 8px; font-weight:600; }
+#title .blurb{ color:var(--ink-dim); max-width:46ch; font-size:15px; line-height:1.55; margin:10px 0 20px; }
+.menu{ display:flex; flex-direction:column; gap:12px; width:min(330px,86vw); }
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex; align-items:stretch; gap:10px;
+  pointer-events:none;
+}
+.topbar > *{ pointer-events:auto; }
+.stat{
+  flex:1 1 0; min-width:0;
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:2px solid var(--line); border-radius:12px;
+  box-shadow:0 5px 0 var(--panel-lip);
+  padding:7px 10px 8px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.stat .k{ font-family:var(--mono); font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--ink-faint); font-weight:600; }
+.stat .v{
+  font-family:var(--mono); font-size:clamp(17px,4.4vw,24px); font-weight:700;
+  font-variant-numeric:tabular-nums; line-height:1.12; letter-spacing:-.03em;
+  will-change:transform;
+}
+/* The reference punches a number when it changes: it scales up and spills
+   past its panel, then settles. Measured at roughly 3 frames out, 15 back. */
+@keyframes statPunch{
+  0%   { transform:scale(1); }
+  18%  { transform:scale(1.52); }
+  100% { transform:scale(1); }
+}
+.stat .v.punch{ animation:statPunch .34s cubic-bezier(.2,1.5,.4,1); }
+.stat{ overflow:visible; }
+.stat .v small{ font-size:.58em; color:var(--ink-faint); font-weight:800; }
+.stat.hot .v{ color:var(--amber); }
+.stat.good .v{ color:var(--hit); }
+.stat.bad .v{ color:var(--miss); }
+
+/* progress pips for the 25 trials */
+.pips{ display:flex; flex-wrap:wrap; gap:3px; justify-content:center; margin-top:8px; pointer-events:none; }
+.pip{ width:9px; height:9px; border-radius:2px; background:#2a2336; border:1px solid #0d0a14; transition:background .2s, transform .2s; }
+.pip.hit{ background:var(--hit); transform:scale(1.18); }
+.pip.miss{ background:#4a4057; }
+.pip.now{ background:var(--amber); box-shadow:0 0 9px var(--amber); }
+
+/* ---------- symbol picker ---------- */
+.picker{
+  margin-top:auto;
+  display:flex; gap:clamp(6px,1.6vw,12px); justify-content:center; align-items:flex-end;
+  pointer-events:none;
+}
+.sym{
+  pointer-events:auto;
+  position:relative;
+  width:clamp(54px,16vw,92px); aspect-ratio:1;
+  border-radius:14px;
+  border:2px solid var(--line);
+  background:linear-gradient(180deg,#241d30,#15111e);
+  box-shadow:0 6px 0 var(--panel-lip), 0 10px 20px rgba(0,0,0,.5);
+  cursor:pointer; display:grid; place-items:center;
+  transition:transform .09s ease, border-color .12s, box-shadow .09s, background .15s;
+}
+.sym canvas{ width:76%; height:76%; display:block; filter:drop-shadow(0 2px 0 rgba(0,0,0,.5)); }
+.sym:hover{ transform:translateY(-4px); border-color:var(--brass); box-shadow:0 10px 0 var(--panel-lip), 0 16px 26px rgba(0,0,0,.55); }
+.sym:active{ transform:translateY(2px); box-shadow:0 2px 0 var(--panel-lip); }
+.sym.sel{
+  border-color:var(--amber);
+  background:linear-gradient(180deg,#3a2c17,#241a0d);
+  box-shadow:0 6px 0 #4a3310, 0 0 26px rgba(232,163,61,.42);
+  transform:translateY(-6px) scale(1.04);
+}
+.sym .key{
+  position:absolute; top:3px; right:6px; font-family:var(--mono);
+  font-size:10px; font-weight:600; color:var(--ink-faint);
+}
+.sym.sel .key{ color:var(--amber); }
+
+.hint{ font-family:var(--mono); text-align:center; color:var(--ink-faint); font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; margin:10px 0 2px; font-weight:600; }
+
+/* ---------- generic rows ---------- */
+.row{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+.spacer{ flex:1 1 auto; }
+
+/* ---------- modal / results ---------- */
+.modal{
+  position:absolute; inset:0; display:grid; place-items:center;
+  z-index:60;
+  background:rgba(4,3,8,.74); backdrop-filter:blur(7px);
+  opacity:0; pointer-events:none; transition:opacity .3s ease;
+  padding:16px;
+}
+.modal.on{ opacity:1; pointer-events:auto; }
+.card-panel{
+  width:min(560px,94vw); max-height:88vh; overflow-y:auto;
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:2px solid var(--line); border-radius:18px;
+  box-shadow:0 12px 0 var(--panel-lip), 0 26px 60px rgba(0,0,0,.7);
+  padding:22px 20px 20px;
+  transform:translateY(16px) scale(.97);
+  transition:transform .32s cubic-bezier(.2,1.4,.4,1);
+}
+.modal.on .card-panel{ transform:none; }
+.card-panel h2{ margin:0 0 4px; font-size:26px; letter-spacing:.02em; }
+.card-panel .lede{ color:var(--ink-dim); font-size:14px; margin:0 0 16px; line-height:1.5; }
+
+/* the big chips x mult readout, straight from the reference */
+.bigscore{ display:flex; align-items:center; justify-content:center; gap:12px; margin:14px 0 6px; }
+.bigscore .pill{
+  font-family:var(--mono);
+  min-width:112px; padding:10px 16px; border-radius:12px;
+  font-size:clamp(30px,8vw,48px); font-weight:700; text-align:center;
+  color:#fff; font-variant-numeric:tabular-nums;
+  text-shadow:0 3px 0 rgba(0,0,0,.4);
+}
+.bigscore .pill.a{ background:var(--chips); box-shadow:0 7px 0 #14618f; }
+.bigscore .pill.b{ background:var(--mult); box-shadow:0 7px 0 #8f201c; }
+.bigscore .x{ font-size:clamp(22px,5vw,34px); font-weight:900; color:var(--mult); }
+
+.statgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin:14px 0; }
+.statgrid .cell{ background:rgba(0,0,0,.26); border:1px solid var(--line); border-radius:10px; padding:9px 11px; }
+.statgrid .cell .k{ font-family:var(--mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); font-weight:600; }
+.statgrid .cell .v{ font-family:var(--mono); font-size:19px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:1px; letter-spacing:-.02em; }
+
+.verdict{ border-radius:11px; padding:11px 14px; font-weight:900; text-align:center; letter-spacing:.03em; margin:4px 0 2px; border:2px solid; }
+.verdict.neutral{ background:rgba(109,100,128,.16); border-color:#4b4260; color:var(--ink-dim); }
+.verdict.weak{ background:rgba(232,163,61,.14); border-color:#6d5220; color:var(--amber); }
+.verdict.strong{ background:rgba(73,209,124,.14); border-color:#245c3b; color:var(--hit); }
+
+.fineprint{ color:var(--ink-faint); font-size:11.5px; line-height:1.6; margin-top:14px; border-top:1px solid var(--line); padding-top:11px; }
+.fineprint code{ background:rgba(0,0,0,.4); padding:1px 5px; border-radius:4px; font-size:10.5px; color:var(--brass); word-break:break-all; }
+
+.toprow{ display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+.chip{
+  font-family:var(--mono);
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:999px;
+  padding:4px 11px; font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-dim);
+}
+.chip b{ color:var(--brass); font-weight:900; }
+
+.iconbtn{
+  pointer-events:auto;
+  width:38px; height:38px; flex:0 0 auto;
+  border-radius:11px; border:2px solid var(--line);
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  box-shadow:0 5px 0 var(--panel-lip);
+  color:var(--ink-dim); font-size:16px; font-weight:900;
+  display:grid; place-items:center; cursor:pointer;
+}
+.iconbtn:hover{ color:var(--ink); border-color:var(--brass); }
+.iconbtn:active{ transform:translateY(3px); box-shadow:0 2px 0 var(--panel-lip); }
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  *{ transition-duration:.01ms !important; animation-duration:.01ms !important; }
+}
+
+@media (max-width:420px){
+  .stat .k{ font-size:8.5px; letter-spacing:.12em; }
+  .card-panel{ padding:18px 15px 16px; }
+}
+
+/* ---------------------------------------------------------------
+   Career log
+   --------------------------------------------------------------- */
+.scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 2px 24px; min-height:0; }
+.sheet{
+  width:min(640px,96%); margin:0 auto; padding:22px 20px 20px;
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:2px solid var(--line); border-radius:18px;
+  box-shadow:0 12px 0 var(--panel-lip), 0 26px 60px rgba(0,0,0,.6);
+}
+.sheet h2{ margin:0 0 4px; font-size:26px; }
+.sheet .lede{ color:var(--ink-dim); font-size:14px; margin:0 0 16px; line-height:1.5; }
+.sub-h{ font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass);
+  margin:22px 0 4px; font-weight:900; }
+.sub-note{ color:var(--ink-faint); font-size:12.5px; line-height:1.55; margin:0 0 10px; }
+.sub-note b{ color:var(--amber); }
+
+.chart{ background:rgba(0,0,0,.26); border:1px solid var(--line); border-radius:10px; padding:6px 4px; }
+
+/* call bias table */
+.bias{ display:flex; flex-direction:column; gap:5px; }
+.bias-row{
+  display:grid; grid-template-columns:22px 62px 1fr 48px 42px 44px;
+  align-items:center; gap:8px; font-size:12.5px;
+}
+.bias-sym{ display:block; opacity:.9; }
+.bias-name{ color:var(--ink-dim); font-weight:700; white-space:nowrap; }
+.bias-bar{ position:relative; height:12px; background:rgba(0,0,0,.4);
+  border:1px solid var(--line); border-radius:4px; overflow:hidden; min-width:0; }
+.bias-bar i{ position:absolute; inset:0 auto 0 0; background:linear-gradient(90deg,#8f6a22,var(--amber)); display:block; }
+.bias-bar u{ position:absolute; top:-1px; bottom:-1px; width:2px; background:var(--ink-faint); opacity:.8; }
+.bias-pct{ text-align:right; color:var(--ink); font-weight:800; }
+.bias-dev{ text-align:right; color:var(--ink-faint); font-weight:800; }
+.bias-dev.off{ color:var(--amber); }
+.bias-hit{ text-align:right; color:var(--ink-dim); font-weight:800; }
+.bias-head{
+  display:grid; grid-template-columns:22px 62px 1fr 48px 42px 44px; gap:8px;
+  font-size:8.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-faint);
+  font-weight:800; margin-top:2px;
+}
+.bias-head span:nth-child(3){ text-align:left; }
+.bias-head span:nth-child(5),.bias-head span:nth-child(6){ text-align:right; }
+
+/* session list */
+.sessions{ display:flex; flex-direction:column; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+.srow{ display:grid; grid-template-columns:1fr auto auto; gap:12px; padding:7px 11px;
+  border-bottom:1px solid var(--line); font-size:12.5px; align-items:center; }
+.srow:last-child{ border-bottom:0; }
+.srow:nth-child(odd){ background:rgba(255,255,255,.018); }
+.sdate{ color:var(--ink-faint); }
+.shits{ color:var(--ink); font-weight:800; }
+.sz{ color:var(--ink-dim); font-weight:800; min-width:46px; text-align:right; }
+.sz.good{ color:var(--hit); } .sz.bad{ color:var(--miss); }
+
+.btn.danger{ background:linear-gradient(180deg,#ef6b60,var(--miss)); color:#2a0b08;
+  box-shadow:0 4px 0 #7d241d; }
+
+@media (max-width:430px){
+  .bias-row,.bias-head{ grid-template-columns:20px 1fr 46px 38px 40px; }
+  .bias-row .bias-bar{ display:none; }
+  .bias-head span:nth-child(3){ text-align:right; }
+}
+
+/* ---------------------------------------------------------------
+   Remote viewing screen needs a readable ground. The lab is still
+   behind it, but at this point the player is writing, not watching,
+   and candles drifting through the prose made it unreadable.
+   --------------------------------------------------------------- */
+/* No backdrop-filter here. A full-screen one forces the compositor to
+   re-blur the animating WebGL canvas every frame, which starves the main
+   thread badly enough to drop input — and it would be worse on a phone.
+   An opaque gradient gets the same readability for free. */
+#rv{
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(22,17,33,.94), rgba(5,4,10,.985) 72%),
+    #05040a;
+}
+
+/* ---------------------------------------------------------------
+   Career log — mode tabs, and the verdict leading the page
+   --------------------------------------------------------------- */
+.viewtabs{ display:flex; gap:6px; margin:0 0 14px; flex-wrap:wrap; }
+.vtab{
+  flex:1 1 auto; min-height:44px;
+  font-family:inherit; font-weight:800; font-size:12.5px;
+  letter-spacing:.04em; color:var(--ink-dim);
+  background:rgba(0,0,0,.3); border:2px solid var(--line); border-radius:10px;
+  padding:8px 12px; cursor:pointer; display:flex; align-items:center;
+  justify-content:center; gap:7px; transition:color .14s, border-color .14s, background .14s;
+}
+.vtab .n{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);
+  background:rgba(0,0,0,.35); border-radius:999px; padding:1px 7px; }
+.vtab:hover{ color:var(--ink); border-color:var(--brass); }
+.vtab.on{ color:#1a1208; background:linear-gradient(180deg,#f0b652,var(--amber)); border-color:#8f5f14; }
+.vtab.on .n{ color:#3a2608; background:rgba(0,0,0,.14); }
+
+/* The verdict answers the question the player arrived with, so it is the
+   loudest thing on the page rather than a quiet pill below the heading. */
+.verdict{
+  display:flex; align-items:baseline; justify-content:space-between; gap:14px;
+  font-size:clamp(21px,3.2vw,30px); font-weight:900; letter-spacing:.01em;
+  padding:16px 18px; border-radius:12px; text-align:left;
+  border:2px solid; border-left-width:6px;
+}
+.verdict .vl{ min-width:0; }
+.verdict .vz{ font-size:.62em; opacity:.85; white-space:nowrap; }
+.verdict.neutral{ color:var(--ink); border-color:#4b4260; background:rgba(109,100,128,.14); }
+.verdict.weak{ color:var(--amber); border-color:#6d5220; background:rgba(232,163,61,.12); }
+.verdict.strong{ color:var(--hit); border-color:#245c3b; background:rgba(73,209,124,.12); }
+
+/* bias bar now diverges about the 20% tick, so it encodes the deviation */
+.bias-bar i{ position:absolute; top:0; bottom:0; display:block; }
+.bias-bar i.pos{ background:linear-gradient(90deg,#2a6b3f,var(--hit)); }
+.bias-bar i.neg{ background:linear-gradient(90deg,var(--miss),#6b2a2a); }
+
+.smode{
+  font-family:var(--mono); font-size:9.5px; font-weight:700;
+  color:var(--ink-faint); border:1px solid var(--line); border-radius:4px;
+  padding:1px 5px; letter-spacing:.06em;
+}
+.srow{ grid-template-columns:1fr auto auto auto; }
+
+/* the session list and bias table must survive a 390px phone */
+@media (max-width:520px){
+  .bias-row,.bias-head{ grid-template-columns:20px 1fr 54px 44px; }
+  .bias-row .bias-bar{ display:none; }
+  .bias-head span:nth-child(3){ display:none; }
+  .bias-head span:nth-child(4){ text-align:right; }
+  .verdict{ flex-direction:column; align-items:flex-start; gap:4px; }
+}
+
+/* Shown instead of the stat grid below the inference threshold. The numbers
+   are all computable at n=3 and all misleading, so none of them appear. */
+.tooearly{
+  display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+  background:rgba(0,0,0,.26); border:1px solid var(--line);
+  border-left:4px solid var(--ink-faint); border-radius:10px;
+  padding:13px 15px; margin:14px 0;
+}
+.tooearly b{ font-size:22px; color:var(--ink); font-weight:700; white-space:nowrap; }
+.tooearly span{ flex:1 1 220px; min-width:0; font-size:12.5px; line-height:1.55; color:var(--ink-dim); }

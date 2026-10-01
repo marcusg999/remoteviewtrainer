@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # so the site can be published before this is merged, and re-published on demand
+  workflow_dispatch:
+
+# Allow one deployment at a time; don't cancel one that is already shipping.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      # The odds are the point of this game, so the site does not ship
+      # unless the statistics and randomness tests pass.
+      - run: npm test
+
+      - uses: actions/configure-pages@v5
+        with:
+          # turns Pages on the first time this runs, so nobody has to go
+          # clicking through repository settings
+          enablement: true
+
+      - name: Build
+        env:
+          # a project site lives at /<repo>/, not at the domain root
+          PAGES_BASE: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

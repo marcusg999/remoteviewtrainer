@@ -197,7 +197,7 @@ export class Lab {
    * reveal — which is the whole moment this room exists to serve.
    */
   _buildKeyLight() {
-    const key = new THREE.SpotLight(0xffd9a0, 34, 11, 0.78, 0.72, 1.5);
+    const key = new THREE.SpotLight(0xffe8c4, 48, 11, 0.74, 0.68, 1.5);
     key.position.set(0.6, 4.0, 2.6);
     key.target.position.set(0, 0.2, -0.2);
     if (this.quality === 'high') {
@@ -255,9 +255,11 @@ export class Lab {
 
       // additive halo: this is what makes the candle read as a light source
       // on the low tier, where the bloom pass is switched off entirely
+      // the halo is deliberately modest: a candle should read as a light
+      // source without out-shining the card the player is trying to read
       const glow = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: glowTex, color: 0xffb860, transparent: true,
-        blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.85,
+        map: glowTex, color: 0xd98f45, transparent: true,
+        blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5,
       }));
       glow.scale.setScalar(1.15 * sp.s);
       glow.position.y = flame.position.y;
@@ -341,8 +343,8 @@ export class Lab {
       c.flame.scale.set(0.7 + n * 0.07, 1.7 + n * 0.24, 0.7 + n * 0.07);
       c.flame.position.x = Math.sin(t * 2.7) * 0.008;
       if (c.glow) {
-        c.glow.scale.setScalar((1.15 + n * 0.16) * (c.base / 5.2));
-        c.glow.material.opacity = 0.72 + n * 0.16;
+        c.glow.scale.setScalar((0.95 + n * 0.14) * (c.base / 5.2));
+        c.glow.material.opacity = 0.42 + n * 0.12;
       }
       c.light.position.x = Math.sin(t * 1.9) * 0.03;
       c.light.position.z = Math.cos(t * 2.4) * 0.03;

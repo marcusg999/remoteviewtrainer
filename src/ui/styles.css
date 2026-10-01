@@ -74,20 +74,31 @@ html,body{
   will-change:transform,opacity;
   font-family:var(--mono);
   font-weight:700;
-  font-size:clamp(26px, 5.2vw, 46px);
+  /* The reference's floating text has a cap height around 5% of screen
+     height at 1080p. Clamping at 46px made ours a label where theirs is an
+     event. */
+  font-size:clamp(28px, 5.4vw, 72px);
   letter-spacing:.01em;
   white-space:nowrap;
   pointer-events:none;
   font-variant-numeric:tabular-nums;
   text-shadow:
-    -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000,
-    -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+    -3px 0 0 #000, 3px 0 0 #000, 0 -3px 0 #000, 0 3px 0 #000,
+    -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;
 }
 .float-text[data-kind="hit"]{ color:var(--hit); text-shadow:
-  -2px 0 0 #06240f, 2px 0 0 #06240f, 0 -2px 0 #06240f, 0 2px 0 #06240f,
-  -2px -2px 0 #06240f, 2px -2px 0 #06240f, -2px 2px 0 #06240f, 2px 2px 0 #06240f,
-  0 6px 0 rgba(0,0,0,.5); }
-.float-text[data-kind="miss"]{ color:#d8cfe0; opacity:.85; font-size:clamp(20px,3.6vw,30px); }
+  -3px 0 0 #06240f, 3px 0 0 #06240f, 0 -3px 0 #06240f, 0 3px 0 #06240f,
+  -3px -3px 0 #06240f, 3px -3px 0 #06240f, -3px 3px 0 #06240f, 3px 3px 0 #06240f,
+  0 7px 0 rgba(0,0,0,.5); }
+/* A miss is 80% of outcomes in a five-symbol task, so it is the dominant
+   feedback event. It gets the same weight as a hit and differs by colour
+   alone — demoting it to half the size made the common case feel like
+   nothing happened. */
+.float-text[data-kind="miss"]{ color:#9f93b8; text-shadow:
+  -3px 0 0 #120a1c, 3px 0 0 #120a1c, 0 -3px 0 #120a1c, 0 3px 0 #120a1c,
+  -3px -3px 0 #120a1c, 3px -3px 0 #120a1c, -3px 3px 0 #120a1c, 3px 3px 0 #120a1c,
+  0 7px 0 rgba(0,0,0,.45); }
+.float-text .ch{ display:inline-block; will-change:transform; }
 .float-text[data-kind="streak"]{ color:var(--amber); }
 .float-text[data-kind="coord"]{ color:var(--violet); }
 

@@ -95,7 +95,7 @@ export class ZenerRun {
   /** A visible stack of remaining cards, so the run has a physical quantity. */
   _buildDeckStack() {
     this.stack = new THREE.Group();
-    this.stack.position.set(1.95, 0.04, 0.62);
+    this.stack.position.set(2.12, 0.04, -0.72);
     this.stack.rotation.x = -Math.PI / 2 + 0.05;
     this.stack.rotation.z = 0.08;
     const geo = new THREE.BoxGeometry(CARD_W * 0.78, CARD_H * 0.78, 0.012);
@@ -137,7 +137,7 @@ export class ZenerRun {
     this.active = card;
 
     // deal: slide in from the deck with a small arc
-    card.group.position.set(1.95, 0.12, 0.62);
+    card.group.position.set(2.12, 0.12, -0.72);
     card.group.scale.setScalar(0.82);
     audio.sfxDeal();
     const from = card.group.position.clone();
@@ -174,31 +174,39 @@ export class ZenerRun {
     await this.ctx.tweens.add({ dur: 0.16 });
     this.ctx.director.pushIn(0.30, new THREE.Vector3(0, 0.95, -0.5), 9);
     audio.sfxFlip();
-    card.flip(true, 0.5);
-    await this.ctx.tweens.add({ dur: 0.5 });
 
-    // --- the reveal lands here ---
     const anchor = new THREE.Vector3(0, 1.62, -0.5);
+
+    // The reaction fires on the card's LAND, not on the flip's start. Before
+    // this, the shake and the burst went off while the card was still edge-on
+    // and the impact had nothing to hit.
+    const react = () => {
+      if (hit) {
+        card.pop();
+        audio.sfxHit(this.streak);
+        this.ctx.director.addTrauma(Math.min(0.62, 0.35 + this.streak * 0.07));
+        this.ctx.particles.burst(new THREE.Vector3(0, 0.95, -0.5), {
+          count: 38 + this.streak * 7,
+          speed: 3.3, spread: 1.5, size: 12, life: 1.0,
+          colors: [0x49d17c, 0xe8a33d, 0xfff0cf, 0x9fe8bd],
+        });
+      } else {
+        audio.sfxMiss();
+        this.ctx.director.addTrauma(0.1);
+      }
+    };
+
+    card.flip(true, 0.34, react);
+    await this.ctx.tweens.add({ dur: 0.34 });
+
+    // --- the reveal has landed ---
     if (hit) {
       this.hits++;
       this.streak++;
       this.bestStreak = Math.max(this.bestStreak, this.streak);
 
-      // beat 1 — the card itself reacts
-      card.pop();
-      audio.sfxHit(this.streak - 1);
-      this.ctx.director.addTrauma(Math.min(0.55, 0.26 + this.streak * 0.07));
-      this.ctx.particles.burst(new THREE.Vector3(0, 0.95, -0.5), {
-        count: 34 + this.streak * 7,
-        speed: 3.1, spread: 1.5, size: 11, life: 1.0,
-        colors: [0x49d17c, 0xe8a33d, 0xfff0cf, 0x9fe8bd],
-      });
-
-      // beat 2 — the word lands
-      await this.ctx.tweens.add({ dur: 0.1 });
       this.ctx.floatText.spawn(anchor, 'HIT', { kind: 'hit' });
 
-      // beat 3 — the streak, only once it is worth saying
       if (this.streak >= 3) {
         await this.ctx.tweens.add({ dur: 0.16 });
         this.ctx.floatText.spawn(
@@ -213,8 +221,6 @@ export class ZenerRun {
       }
     } else {
       this.streak = 0;
-      audio.sfxMiss();
-      this.ctx.director.addTrauma(0.06);
       this.ctx.floatText.spawn(anchor, SYMBOL_NAME(target), { kind: 'miss' });
     }
 

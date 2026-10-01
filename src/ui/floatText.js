@@ -33,8 +33,19 @@ export class FloatText {
    */
   spawn(world, text, o = {}) {
     const el = this._acquire();
-    el.textContent = text;
     el.dataset.kind = o.kind || 'plain';
+    // One span per character. The reference wobbles its text letter by
+    // letter, which is most of why its text reads as alive and a single
+    // static string reads as a label.
+    el.textContent = '';
+    const chars = [];
+    for (const c of String(text)) {
+      const span = document.createElement('span');
+      span.className = 'ch';
+      span.textContent = c === ' ' ? '\u00a0' : c;
+      el.appendChild(span);
+      chars.push(span);
+    }
     const item = {
       el,
       world: world.clone(),
@@ -42,6 +53,8 @@ export class FloatText {
       dur: o.dur ?? RISE,
       drift: o.drift ?? 0.55,
       jitter: (Math.random() - 0.5) * 26,
+      chars,
+      seed: Math.random() * 10,
     };
     this.items.push(item);
     // Position it now. Waiting for the next update tick leaves it at the
@@ -64,6 +77,14 @@ export class FloatText {
       it.el.style.transform =
         `translate(-50%,-50%) translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${(pop * shrink).toFixed(3)})`;
       it.el.style.opacity = alpha.toFixed(3);
+
+      // per-character wobble, each letter on its own phase
+      const wob = it.t * 6 + it.seed;
+      for (let c = 0; c < it.chars.length; c++) {
+        const rot = Math.sin(wob + c * 0.9) * 5;
+        const dy = Math.sin(it.t * 5 + it.seed + c * 1.3) * 3;
+        it.chars[c].style.transform = `rotate(${rot.toFixed(2)}deg) translateY(${dy.toFixed(2)}px)`;
+      }
       // behind-camera guard
       it.el.style.visibility = _v.z > 1 ? 'hidden' : 'visible';
   }

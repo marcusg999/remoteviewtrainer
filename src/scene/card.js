@@ -10,11 +10,14 @@
 import * as THREE from 'three';
 import { makeFaceCanvas, makeBackCanvas, CARD_ASPECT } from './cardArt.js';
 import { randomFloat } from '../core/rng.js';
-import { easeOutBack, easeInOutCubic, easeOutCubic, damp, clamp01 } from '../juice/easing.js';
+import { easeOutBack, easeOutQuint, easeOutCubic, damp, clamp01 } from '../juice/easing.js';
 
 export const CARD_W = 1.0;
 export const CARD_H = CARD_W * CARD_ASPECT;
 const THICK = 0.014;
+
+/** Fraction of the flip at which the card is considered to have landed. */
+const LAND_AT = 0.78;
 
 /** Textures are shared across every card — 25 canvases would be absurd. */
 const texCache = new Map();
@@ -63,10 +66,15 @@ export class Card {
 
     // resting pose: a card is never perfectly square to the table
     this.restTilt = (randomFloat() - 0.5) * 0.09;
-    this.restRoll = (randomFloat() - 0.5) * 0.05;
+    this.restRoll = (randomFloat() - 0.5) * 0.11;
     this.phase = randomFloat() * Math.PI * 2;
     this.bobSpeed = 0.75 + randomFloat() * 0.45;
-    this.bobAmp = 0.012 + randomFloat() * 0.009;
+    // Measured against the reference: its cards visibly displace on every
+    // frame. At 1-2% of card height ours were technically moving and
+    // perceptually still, which made the whole scene read as paused.
+    this.bobAmp = 0.028 + randomFloat() * 0.018;
+    this.rollPhase = randomFloat() * Math.PI * 2;
+    this.rollSpeed = 0.8 + randomFloat() * 0.35;
 
     this.home = new THREE.Vector3();
     this.lift = 0;           // current hover/select lift
@@ -89,10 +97,14 @@ export class Card {
     this.outcome = hit;
     const front = this.mesh.material[4];
     if (hit) {
-      front.emissive = new THREE.Color(0x1d5a2f);
-      front.emissiveIntensity = 0.55;
+      front.emissive = new THREE.Color(0x2fbf6a);
+      front.emissiveIntensity = 0.35;
+      front.color = new THREE.Color(0xffffff);
     } else {
-      front.color = new THREE.Color(0x8e8a96);
+      // pull the miss well down, so one glance reads the whole run
+      front.emissive = new THREE.Color(0x000000);
+      front.emissiveIntensity = 0;
+      front.color = new THREE.Color(0x6e6a78);
     }
     front.needsUpdate = true;
   }
@@ -108,10 +120,22 @@ export class Card {
   pop() { this.popT = 0.0001; }
 
   /**
-   * Flip to face up (or down). Arcs the card upward through the turn so it
-   * reads as a physical motion rather than a texture swap.
+   * Flip to face up (or down).
+   *
+   * The timing here is the whole reveal, so it is worth being precise about.
+   * An earlier version used sin(pi*t) for the arc and the scale punch, which
+   * peaks at t=0.5 — exactly when the card is edge-on and 1px wide. Every bit
+   * of the motion happened on the frames the player cannot see, and an
+   * ease-in-out spin then decelerated into the landing, so the card arrived
+   * at rest height, rest scale, zero velocity. The most important moment in
+   * the game eased to a stop.
+   *
+   * Now: the spin is front-loaded so the face crosses into view early, the
+   * arc peaks after that crossing while the card is face-on, and the punch
+   * happens on the LAND rather than mid-turn. `onLand` fires at that moment
+   * so the reaction (shake, particles, text) can land with it.
    */
-  flip(faceUp = true, dur = 0.52) {
+  flip(faceUp = true, dur = 0.34, onLand = null) {
     this.faceUp = faceUp;
     this.flipFrom = this.spinY;
     this.flipTo = faceUp ? 0 : Math.PI;
@@ -124,19 +148,40 @@ export class Card {
     this.flipT = 0;
     this.flipDur = dur;
     this.flipping = true;
+    this.onLand = onLand;
+    this.landed = false;
   }
 
   update(dt, time) {
     // flip
     if (this.flipping) {
       this.flipT = clamp01(this.flipT + dt / this.flipDur);
-      const e = easeInOutCubic(this.flipT);
-      this.spinY = this.flipFrom + this.flipDelta * e;
-      // arc: peaks at the halfway point, where the card is edge-on
-      this.flipArc = Math.sin(this.flipT * Math.PI) * 0.30;
-      // a touch of scale through the turn sells the perspective
-      this.flipScale = 1 + Math.sin(this.flipT * Math.PI) * 0.07;
-      if (this.flipT >= 1) { this.flipping = false; this.flipArc = 0; this.flipScale = 1; }
+      const t = this.flipT;
+
+      // front-loaded spin: the face crosses into view at roughly a third of
+      // the duration instead of halfway through a symmetric ease
+      this.spinY = this.flipFrom + this.flipDelta * easeOutQuint(t);
+
+      // arc peaks at t~0.72, after the face is readable, not at the edge-on frame
+      this.flipArc = Math.sin(Math.pow(t, 1.9) * Math.PI) * 0.30;
+
+      // the land punch: nothing until the spin has resolved, then the card
+      // slams past its rest scale and settles back
+      if (t >= LAND_AT) {
+        const k = clamp01((t - LAND_AT) / (1 - LAND_AT));
+        this.flipScale = 1 + easeOutBack(k, 3.4) * 0.14 * (1 - k);
+        if (!this.landed) { this.landed = true; this.onLand?.(); }
+      } else {
+        this.flipScale = 1;
+      }
+
+      if (this.flipT >= 1) {
+        this.flipping = false;
+        this.flipArc = 0;
+        this.flipScale = 1;
+        // guard: a very long frame could skip past LAND_AT entirely
+        if (!this.landed) { this.landed = true; this.onLand?.(); }
+      }
     }
 
     // smoothed hover state
@@ -171,10 +216,12 @@ export class Card {
     );
     // retired cards lie back on the table; active cards stand up
     const lay = this.layFlat ? -0.95 : 0;
+    // an independent roll so no two cards ever sit parallel
+    const roll = Math.sin(time * this.rollSpeed + this.rollPhase) * 0.03;
     g.rotation.set(
       lay + this.restTilt + sway * 0.5 + this.pointerTilt.y * 0.22,
       this.spinY + this.pointerTilt.x * 0.26,
-      this.restRoll + sway
+      this.restRoll + sway + roll
     );
     const s = this.scale * (this.flipScale || 1) * popScale;
     g.scale.setScalar(s);

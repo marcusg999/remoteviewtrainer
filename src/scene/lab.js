@@ -6,7 +6,6 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { randomFloat } from '../core/rng.js';
@@ -100,6 +99,7 @@ export class Lab {
       tableauZ: 0.62,
     };
 
+    this.shedStage = 0;
     this.candles = [];
     this._buildRoom();
     this._buildKeyLight();
@@ -311,23 +311,39 @@ export class Lab {
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
 
-    if (this.quality !== 'low') {
-      this.bloom = new UnrealBloomPass(
-        new THREE.Vector2(size.x, size.y),
-        this.quality === 'high' ? 0.34 : 0.26, // strength
-        0.55,  // radius
-        0.88   // threshold — only the flames themselves, not the lit felt
-      );
-      this.composer.addPass(this.bloom);
-    }
-
     this.grade = new ShaderPass(GradeShader);
     if (this.quality === 'low') {
       this.grade.uniforms.uGrain.value = 0.03;
       this.grade.uniforms.uAberration.value = 0;
     }
     this.composer.addPass(this.grade);
-    this.composer.addPass(new OutputPass());
+    this.outputPass = new OutputPass();
+    this.composer.addPass(this.outputPass);
+
+    // Bloom is loaded on demand. It is a meaningful slice of the bundle and
+    // the low tier never constructs it, yet every phone was downloading it:
+    // detectQuality() returns 'medium' for any viewport under 500px.
+    if (this.quality !== 'low') this._loadBloom(size);
+  }
+
+  async _loadBloom(size) {
+    try {
+      const { UnrealBloomPass } = await import('three/examples/jsm/postprocessing/UnrealBloomPass.js');
+      if (this.disposed) return;
+      this.bloom = new UnrealBloomPass(
+        new THREE.Vector2(size.x, size.y),
+        this.quality === 'high' ? 0.34 : 0.26, // strength
+        0.55,  // radius
+        0.88   // threshold — only the flames themselves, not the lit felt
+      );
+      if (this.shedStage >= 2) this.bloom.enabled = false;
+      // insert before the grade/output passes so it still sees raw colour
+      const at = this.composer.passes.indexOf(this.grade);
+      this.composer.insertPass(this.bloom, at < 0 ? this.composer.passes.length : at);
+    } catch {
+      // No bloom is a perfectly good scene; the candles carry their own halo.
+      this.bloom = null;
+    }
   }
 
   /** Candle flicker. Driven by layered sines, which beats random jitter —
@@ -436,6 +452,7 @@ export class Lab {
   render() { this.composer.render(); }
 
   dispose() {
+    this.disposed = true;
     this.renderer.dispose();
     this.composer?.dispose?.();
   }

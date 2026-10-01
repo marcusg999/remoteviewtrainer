@@ -452,7 +452,7 @@ export class RemoteViewRun {
     this._nodes.evidence = ev;
 
     const note = el('div', 'rv-ranknote');
-    note.innerHTML = `Tap to rank &middot; tap again to clear<b id="rv-rankstate"></b>`;
+    note.innerHTML = `Tap to rank &middot; tap again to clear<b id="rv-rankstate" class="rv-rankstate"></b>`;
     wrap.appendChild(note);
     this._nodes.rankState = note.querySelector('#rv-rankstate');
 
@@ -580,8 +580,8 @@ export class RemoteViewRun {
     const first = firstId ? this.order.find((t) => t.id === firstId) : null;
     if (this._nodes.rankState) {
       this._nodes.rankState.textContent = first
-        ? ` \u00b7 first choice: ${first.name}${this.ranking.size < this.candidateCount ? ` (${this.ranking.size}/${this.candidateCount} ranked)` : ' \u2014 full ranking'}`
-        : ' \u00b7 no first choice yet';
+        ? `first choice: ${first.name}${this.ranking.size < this.candidateCount ? ` (${this.ranking.size}/${this.candidateCount} ranked)` : ' \u2014 full ranking'}`
+        : 'no first choice yet';
     }
   }
 

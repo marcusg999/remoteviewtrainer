@@ -192,11 +192,20 @@ export function summarize(hits, trials, p) {
 }
 
 /**
+ * Below this many trials we refuse to draw any inference, and the UI must
+ * suppress every derived figure — not just the verdict label. A z-score, a
+ * hit rate and a confidence interval are all perfectly correct at n=3 and
+ * all deeply misleading: one hit in one trial gives z = +2.00 exactly, every
+ * time, and a 95% interval on 2-of-3 excludes the chance line.
+ */
+export const MIN_TRIALS_FOR_INFERENCE = 25;
+
+/**
  * Plain-language verdict. Deliberately conservative: we never tell a player
  * they have psi. Thresholds follow ordinary significance conventions.
  */
 export function verdict(s) {
-  if (s.trials < 25) return { label: 'Insufficient data', tone: 'neutral' };
+  if (s.trials < MIN_TRIALS_FOR_INFERENCE) return { label: 'Insufficient data', tone: 'neutral' };
   const p = s.pTwoTailed;
   if (p > 0.05) return { label: 'Consistent with chance', tone: 'neutral' };
   if (p > 0.01) return { label: 'Suggestive (p < .05)', tone: 'weak' };

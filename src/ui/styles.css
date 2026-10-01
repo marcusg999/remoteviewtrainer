@@ -453,3 +453,14 @@ html,body{
   .bias-head span:nth-child(4){ text-align:right; }
   .verdict{ flex-direction:column; align-items:flex-start; gap:4px; }
 }
+
+/* Shown instead of the stat grid below the inference threshold. The numbers
+   are all computable at n=3 and all misleading, so none of them appear. */
+.tooearly{
+  display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+  background:rgba(0,0,0,.26); border:1px solid var(--line);
+  border-left:4px solid var(--ink-faint); border-radius:10px;
+  padding:13px 15px; margin:14px 0;
+}
+.tooearly b{ font-size:22px; color:var(--ink); font-weight:700; white-space:nowrap; }
+.tooearly span{ flex:1 1 220px; min-width:0; font-size:12.5px; line-height:1.55; color:var(--ink-dim); }

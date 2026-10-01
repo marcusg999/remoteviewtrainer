@@ -371,6 +371,7 @@
    --------------------------------------------------------------- */
 .rv-evidence{
   position:sticky; top:0; z-index:4;
+  max-height:96px; overflow-y:auto;
   display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;
   padding:10px 12px; margin:0 0 10px;
   background:rgba(12,10,18,.92);
@@ -379,7 +380,7 @@
 .rv-ev-shot{ margin:0; flex:0 0 auto; text-align:center; }
 .rv-ev-shot img{
   display:block; border-radius:6px; border:1px solid var(--rv-line, #322a42);
-  background:#f3ead8; object-fit:contain;
+  background:transparent; object-fit:cover; object-position:center;
 }
 .rv-ev-shot figcaption{
   font-family:var(--mono, monospace); font-size:8.5px; letter-spacing:.14em;
@@ -397,3 +398,7 @@
   .rv-ev-shot img{ width:72px; height:54px; }
   .rv-ev-shot:nth-of-type(2) img{ width:88px; height:66px; }
 }
+
+/* The rank state sits on its own line rather than trailing a separator that
+   orphans when the hint above it wraps. */
+.rv-rankstate{ display:block; margin-top:3px; }

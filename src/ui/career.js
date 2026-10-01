@@ -7,7 +7,7 @@
  * shows that the non-random thing in the room is almost always the guesser.
  */
 import { career, allSessions, zTrace, wipe, exportJson } from '../core/store.js';
-import { summarize, verdict, chi2Sf } from '../core/stats.js';
+import { summarize, verdict, chi2Sf, MIN_TRIALS_FOR_INFERENCE } from '../core/stats.js';
 import { SYMBOLS, SYMBOL_LABEL, drawSymbol } from '../scene/cardArt.js';
 
 const fmtP = (p) => (p == null ? '—' : p < 0.0001 ? '< .0001' : p.toFixed(4).replace(/^0/, ''));
@@ -25,7 +25,7 @@ function uniformityChi2(counts) {
 /** Running z over sessions, drawn as an SVG path with a zero line. */
 function zTraceSvg(trace, w = 520, h = 112) {
   if (!trace.length) return '';
-  const pad = { l: 26, r: 8, t: 10, b: 16 };
+  const pad = { l: 44, r: 10, t: 12, b: 16 };
   const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
   const zs = trace.map((p) => p.z);
   const lim = Math.max(3, Math.ceil(Math.max(...zs.map(Math.abs)) + 0.5));
@@ -44,9 +44,9 @@ function zTraceSvg(trace, w = 520, h = 112) {
      aria-label="Running z-score across ${trace.length} sessions, currently ${last.z.toFixed(2)}">
     ${band}
     <line x1="${pad.l}" y1="${Y(0)}" x2="${w - pad.r}" y2="${Y(0)}" stroke="#4b4260" stroke-width="1"/>
-    <text x="2" y="${Y(1.96) + 4}" fill="#6d6480" font-size="9" font-family="monospace">+1.96</text>
-    <text x="2" y="${Y(-1.96) + 4}" fill="#6d6480" font-size="9" font-family="monospace">−1.96</text>
-    <text x="2" y="${Y(0) + 4}" fill="#6d6480" font-size="9" font-family="monospace">0</text>
+    <text x="2" y="${Y(1.96) + 4}" fill="#8a8099" font-size="11" font-family="monospace">+1.96</text>
+    <text x="2" y="${Y(-1.96) + 4}" fill="#8a8099" font-size="11" font-family="monospace">−1.96</text>
+    <text x="2" y="${Y(0) + 4}" fill="#8a8099" font-size="11" font-family="monospace">0</text>
     <path d="${area}" fill="rgba(232,163,61,.14)"/>
     <path d="${line}" fill="none" stroke="#e8a33d" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
     <circle cx="${X(trace.length - 1).toFixed(1)}" cy="${Y(last.z).toFixed(1)}" r="4" fill="#e8a33d" stroke="#171320" stroke-width="2"/>
@@ -102,6 +102,10 @@ export function renderCareer(host, { onBack, onPlay }) {
   const v = verdict(c);
   const trace = zTrace(view.modes);
   const sym = symbolStats(sessions);
+  // Nothing derived is shown below the inference threshold — see
+  // MIN_TRIALS_FOR_INFERENCE. The verdict used to be gated on its own while
+  // the grid beside it printed a hit rate and an interval regardless.
+  const enough = c.trials >= MIN_TRIALS_FOR_INFERENCE;
   const counts = {
     all: allSessions().length,
     zener: allSessions().filter((s) => s.mode !== 'rv').length,
@@ -134,16 +138,24 @@ export function renderCareer(host, { onBack, onPlay }) {
         ${c.empty ? `<div class="row"><button class="btn" data-act="play">Run your first set</button></div>` : `
         <div class="verdict ${v.tone}">
           <span class="vl">${v.label}</span>
-          ${c.trials ? `<span class="vz t-mono">z ${sign(c.z)}</span>` : ''}
+          ${enough ? `<span class="vz t-mono">z ${sign(c.z)}</span>` : ''}
         </div>
 
+        ${!enough ? `
+        <div class="tooearly">
+          <b class="t-mono">${c.hits} of ${c.trials}</b>
+          <span>${MIN_TRIALS_FOR_INFERENCE - c.trials} more trial${MIN_TRIALS_FOR_INFERENCE - c.trials === 1 ? '' : 's'}
+          before any of this means anything. A z-score and a confidence interval
+          exist at this sample size and both would mislead you &mdash; one hit in one
+          trial is z&nbsp;=&nbsp;+2.00 every single time.</span>
+        </div>` : `
         <div class="statgrid">
           <div class="cell"><div class="k">Hit rate</div><div class="v">${(c.rate * 100).toFixed(2)}%</div></div>
           <div class="cell"><div class="k">Expected</div><div class="v">${c.expected.toFixed(1)}</div></div>
           <div class="cell"><div class="k">Exact p (1-tail)</div><div class="v">${fmtP(c.pExact)}</div></div>
           <div class="cell"><div class="k">p (2-tail)</div><div class="v">${fmtP(c.pTwoTailed)}</div></div>
           <div class="cell"><div class="k">95% CI on rate</div><div class="v">${(c.ci.lo * 100).toFixed(1)}–${(c.ci.hi * 100).toFixed(1)}%</div></div>
-        </div>
+        </div>`}
 
         ${trace.length ? `
         <h3 class="sub-h">Running z across sessions</h3>
@@ -152,7 +164,7 @@ export function renderCareer(host, { onBack, onPlay }) {
 
         ${sym.any && view.id !== 'rv' ? `
         <h3 class="sub-h">Your call bias</h3>
-        <p class="sub-note">How often you named each symbol, against the 20% a uniform guesser would produce. People are poor random generators, and this is usually the only non-random thing in the room.</p>
+        <p class="sub-note">${view.id === 'all' && counts.rv ? '<b>Zener sessions only</b> &mdash; remote viewing has no symbol calls. ' : ''}How often you named each symbol, against the 20% a uniform guesser would produce. People are poor random generators, and this is usually the only non-random thing in the room.</p>
         <div class="bias">
           ${SYMBOLS.map((s) => {
             const pct = totalCalls ? (sym.calls[s] / totalCalls) * 100 : 0;
@@ -185,13 +197,17 @@ export function renderCareer(host, { onBack, onPlay }) {
         <div class="sessions">
           ${sessions.slice().reverse().slice(0, 40).map((s) => {
             const ss = summarize(s.hits, s.trials, s.chance);
-            const flag = ss.z >= 1.96 ? 'good' : ss.z <= -1.96 ? 'bad' : '';
+            // Every 1-of-1 remote-viewing hit is exactly z = +2.00, so
+            // colouring it the same green as a genuinely significant 25-trial
+            // set is the precise self-deception this screen warns about.
+            const small = s.trials < MIN_TRIALS_FOR_INFERENCE;
+            const flag = small ? '' : ss.z >= 1.96 ? 'good' : ss.z <= -1.96 ? 'bad' : '';
             return `<div class="srow">
               <span class="sdate t-mono">${new Date(s.at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                 ${new Date(s.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               <span class="smode">${s.mode === 'rv' ? 'RV' : 'Z'}</span>
               <span class="shits t-mono">${s.hits}/${s.trials}</span>
-              <span class="sz t-mono ${flag}">${sign(ss.z)}</span>
+              <span class="sz t-mono ${flag}">${small ? '—' : sign(ss.z)}</span>
             </div>`;
           }).join('')}
         </div>

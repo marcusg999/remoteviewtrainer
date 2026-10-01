@@ -10,6 +10,16 @@
 import { describe, it, expect } from 'vitest';
 import { TARGETS, CANDIDATES, CHANCE, chooseTargetSet, byId, poolIntegrity } from '../src/data/targets.js';
 
+/**
+ * Critical values at alpha = 1e-8 rather than the conventional 0.001.
+ * See the note in rng.test.js: at 0.001 these tests fail roughly one CI run
+ * in 111 purely by chance, which is what happened. Detection power against
+ * real bias is unaffected — a biased draw produces chi-square far above
+ * either bound.
+ */
+const CHI2_DF4 = 43.07;    // P(X > 43.07 | df=4)  ~ 1e-8
+const CHI2_DF47 = 123.02;  // P(X > 123.02 | df=47) ~ 1e-8
+
 describe('target pool', () => {
   it('is large enough for the protocol', () => {
     expect(TARGETS.length).toBeGreaterThanOrEqual(40);
@@ -66,8 +76,7 @@ describe('chooseTargetSet — the invariants that cannot break', () => {
     const exp = N / k;
     let chi2 = 0;
     for (const c of counts.values()) chi2 += (c - exp) ** 2 / exp;
-    // df = k-1. Mean of chi2 is df; the 0.001 upper tail for df=47 is ~82.7.
-    expect(chi2).toBeLessThan(82.7);
+    expect(chi2).toBeLessThan(CHI2_DF47);
   });
 
   it('puts the true target in each display position about a fifth of the time', () => {
@@ -78,8 +87,8 @@ describe('chooseTargetSet — the invariants that cannot break', () => {
     }
     const exp = N / CANDIDATES;
     const chi2 = pos.reduce((a, c) => a + (c - exp) ** 2 / exp, 0);
-    // df=4, 0.001 critical value is 18.47. Position must leak nothing.
-    expect(chi2).toBeLessThan(18.47);
+    // Position must leak nothing about which candidate is the target.
+    expect(chi2).toBeLessThan(CHI2_DF4);
     for (const p of pos) expect(Math.abs(p / N - 0.2)).toBeLessThan(0.02);
   });
 
@@ -92,6 +101,6 @@ describe('chooseTargetSet — the invariants that cannot break', () => {
     const exp = (N * (CANDIDATES - 1)) / k;
     let chi2 = 0;
     for (const c of counts.values()) chi2 += (c - exp) ** 2 / exp;
-    expect(chi2).toBeLessThan(82.7);
+    expect(chi2).toBeLessThan(CHI2_DF47);
   });
 });

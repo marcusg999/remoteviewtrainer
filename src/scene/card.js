@@ -238,12 +238,17 @@ export class Card {
       if (this.outcomeSet) {
         const front = this.mesh.material[4];
         const edge = this.mesh.material[0];
+        // The brighten-into-land ramp hands over at 0.45, so the punch has to
+        // start there too. Starting at the resting 0.35 stepped the card DOWN
+        // by 0.10 for one frame at exactly the landing — a dip on the beat.
+        // The (1 - k) term carries 0.45 into the resting value instead.
         if (this.outcome) {
-          front.emissiveIntensity = 0.35 + p * 0.55;
+          front.emissiveIntensity = 0.35 + (1 - k) * 0.10 + p * 0.55;
           edge.emissive.setHex(0x2fbf6a);
           edge.emissiveIntensity = p * 0.5;
         } else {
-          front.emissiveIntensity = p * 0.22;
+          // a miss lets the warmth die off rather than cutting it
+          front.emissiveIntensity = (1 - k) * 0.18 + p * 0.22;
           edge.emissive.setHex(0x3a2a4e);
           edge.emissiveIntensity = p * 0.25;
         }

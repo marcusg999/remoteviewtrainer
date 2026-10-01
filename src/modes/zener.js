@@ -192,7 +192,7 @@ export class ZenerRun {
         this.ctx.director.addTrauma(Math.min(0.62, 0.35 + this.streak * 0.07));
         this.ctx.particles.burst(new THREE.Vector3(0, 0.95, -0.5), {
           count: 52 + this.streak * 8,
-          speed: 3.3, spread: 2.6, up: 0.35, size: 0.034, life: 1.1,
+          speed: 3.3, spread: 2.6, up: 0.35, size: 0.034, life: 1.1, ring: 0.42,
           colors: [0x49d17c, 0xe8a33d, 0xfff0cf, 0x9fe8bd],
         });
       } else {
@@ -220,7 +220,7 @@ export class ZenerRun {
         );
         this.ctx.director.addTrauma(0.14);
         this.ctx.particles.burst(new THREE.Vector3(1.1, 1.1, -0.2), {
-          count: 24 + this.streak * 5, speed: 2.4, spread: 2.4, up: 0.4, size: 0.026, life: 0.9,
+          count: 24 + this.streak * 5, speed: 2.4, spread: 2.4, up: 0.4, size: 0.026, life: 0.9, ring: 0.3,
           colors: [0xe8a33d, 0xfff0cf],
         });
       }

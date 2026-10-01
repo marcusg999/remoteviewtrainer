@@ -98,7 +98,9 @@ export class Particles {
 
   /**
    * @param {THREE.Vector3} origin
-   * @param {object} o { count, speed, spread, colors:[hex], size, life, up }
+   * @param {object} o { count, speed, spread, colors:[hex], size, life, up, ring }
+   *   ring — spawn on a ring of this radius around the origin instead of at a
+   *   point, so a burst frames the card rather than covering its symbol.
    */
   burst(origin, o = {}) {
     const count = o.count ?? 24;
@@ -108,14 +110,23 @@ export class Particles {
     const size = o.size ?? 0.028;   // world units
     const life = o.life ?? 0.9;
     const up = o.up ?? 1.4;
+    const ring = o.ring ?? 0;
 
     const a = this.geo.attributes;
     for (let i = 0; i < count; i++) {
       const idx = this.cursor;
       this.cursor = (this.cursor + 1) % this.n;
 
-      a.position.array[idx * 3 + 0] = origin.x;
-      a.position.array[idx * 3 + 1] = origin.y;
+      // spawn on a ring in the card's plane, not at a single point
+      let ox = 0, oy = 0;
+      if (ring > 0) {
+        const ra = randomFloat() * Math.PI * 2;
+        const rr = ring * (0.72 + randomFloat() * 0.42);
+        ox = Math.cos(ra) * rr;
+        oy = Math.sin(ra) * rr * 1.3;   // card is taller than it is wide
+      }
+      a.position.array[idx * 3 + 0] = origin.x + ox;
+      a.position.array[idx * 3 + 1] = origin.y + oy;
       a.position.array[idx * 3 + 2] = origin.z;
 
       const th = randomFloat() * Math.PI * 2;

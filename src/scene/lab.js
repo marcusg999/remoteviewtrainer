@@ -89,6 +89,17 @@ export class Lab {
     this.camera.lookAt(0, 0.46, -0.15);
     this.cameraRig = { base: this.camera.position.clone(), target: new THREE.Vector3(0, 0.46, -0.15) };
 
+    /** Portrait phones have a narrow horizontal field of view, so the card row
+     *  has to be tighter and shorter or it runs off both edges. Modes read
+     *  this rather than hard-coding landscape numbers. */
+    this.layout = {
+      portrait: false,
+      tableauSpread: 0.50,
+      tableauMax: 7,
+      tableauScale: 0.37,
+      tableauZ: 0.62,
+    };
+
     this.candles = [];
     this._buildRoom();
     this._buildKeyLight();
@@ -313,14 +324,33 @@ export class Lab {
     const el = this.renderer.domElement;
     const w = el.clientWidth || window.innerWidth;
     const h = el.clientHeight || window.innerHeight;
+    const portrait = h > w;
+    this.layout.portrait = portrait;
+    if (portrait) {
+      // closer in, tighter row, fewer cards kept on the table
+      this.layout.tableauSpread = 0.34;
+      this.layout.tableauMax = 5;
+      this.layout.tableauScale = 0.30;
+      this.layout.tableauZ = 0.48;
+      this.cameraRig.base.set(0, 2.5, 3.15);
+      this.cameraRig.target.set(0, 0.66, -0.12);
+    } else {
+      this.layout.tableauSpread = 0.50;
+      this.layout.tableauMax = 7;
+      this.layout.tableauScale = 0.37;
+      this.layout.tableauZ = 0.62;
+      this.cameraRig.base.set(0, 2.9, 4.05);
+      this.cameraRig.target.set(0, 0.46, -0.15);
+    }
+    this.onLayout?.(this.layout, this.cameraRig);
     const dprCap = this.quality === 'high' ? 2 : this.quality === 'medium' ? 1.5 : 1;
     const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(w, h, false);
     this.composer.setSize(w, h);
     this.camera.aspect = w / h;
-    // keep the table framed on tall phone screens
-    this.camera.fov = h > w ? 58 : 42;
+    // a taller frame needs a wider vertical angle to keep the row in shot
+    this.camera.fov = portrait ? 54 : 40;
     this.camera.updateProjectionMatrix();
   }
 

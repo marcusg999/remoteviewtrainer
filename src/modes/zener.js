@@ -229,21 +229,23 @@ export class ZenerRun {
   _retire(card, hit) {
     card.setOutcome(hit);
     this.tableau.push({ card, hit });
-    const MAXT = 7;
+    const L0 = this.ctx.lab?.layout ?? { tableauSpread: 0.50, tableauMax: 7, tableauScale: 0.37, tableauZ: 0.62 };
+    const MAXT = L0.tableauMax;
     if (this.tableau.length > MAXT) {
       const old = this.tableau.shift();
       const g = old.card.group;
       this.ctx.tweens.add({
         dur: 0.4, ease: easeOutCubic,
-        onUpdate: (_, e) => { g.position.y = 0.22 - e * 0.4; g.position.z = 0.62 + e * 1.8; g.scale.setScalar(0.37 * (1 - e * 0.85)); },
+        onUpdate: (_, e) => { g.position.y = 0.22 - e * 0.4; g.position.z = L0.tableauZ + e * 1.8; g.scale.setScalar(L0.tableauScale * (1 - e * 0.85)); },
         onComplete: () => { this.group.remove(g); old.card.dispose(); },
       });
     }
+    const L = L0;
     const n = this.tableau.length;
     this.tableau.forEach((t, i) => {
       const k = i - (n - 1) / 2;
-      const tx = k * 0.50;
-      const tz = 0.62 - Math.abs(k) * 0.04;
+      const tx = k * L.tableauSpread;
+      const tz = L.tableauZ - Math.abs(k) * 0.04;
       const ty = 0.22;
       // lean them back toward the camera so the symbol still reads
       t.card.layFlat = true;
@@ -258,7 +260,7 @@ export class ZenerRun {
             from.y + (ty - from.y) * e,
             from.z + (tz - from.z) * e
           );
-          const s = fromS + (0.37 - fromS) * e;
+          const s = fromS + (L.tableauScale - fromS) * e;
           c.targetScale = s; c.scale = s;
         },
       });

@@ -47,7 +47,15 @@ const director = new CameraDirector(
   new THREE.Vector3(0, 0.62, 0.1)
 );
 
-const ctx = { scene: lab.scene, particles, floatText, director, tweens, onUpdate: onRunUpdate };
+const ctx = { scene: lab.scene, lab, particles, floatText, director, tweens, onUpdate: onRunUpdate };
+
+// Keep the camera director in step with the layout the Lab picks on resize.
+lab.onLayout = (_layout, rig) => {
+  director.base.copy(rig.base);
+  director.look.copy(rig.target);
+  director.zoomFocus.copy(rig.target);
+};
+lab.resize();
 
 let run = null;
 let screen = 'title';

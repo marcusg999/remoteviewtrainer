@@ -28,12 +28,17 @@ export function randomInt(max) {
   }
 }
 
-/** Uniform float in [0, 1) with 53 bits of entropy. Cosmetic use is fine too. */
+/**
+ * Uniform float in [0, 1) with a full 53-bit mantissa.
+ *
+ * The split must be 27 high bits and 26 low bits. Taking 27 of each overflows
+ * past 2^53 and the function can then return values at or above 1, which is
+ * exactly the kind of bug that quietly corrupts everything downstream.
+ */
 export function randomFloat() {
   const buf = new Uint32Array(2);
   g.getRandomValues(buf);
-  // 53-bit mantissa: 26 high bits + 27 low bits
-  return ((buf[0] >>> 5) * 2 ** 27 + (buf[1] >>> 5)) / 2 ** 53;
+  return ((buf[0] >>> 5) * 2 ** 26 + (buf[1] >>> 6)) / 2 ** 53;
 }
 
 /** Fisher-Yates, unbiased, in place. Returns the same array. */

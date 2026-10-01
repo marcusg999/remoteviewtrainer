@@ -530,3 +530,369 @@ export const TARGETS = [
       speckle(ctx, w, h, 16, 'rgba(255,255,255,0.5)', 0, 1, 0, 0.3, 0.006, r);
     },
   },
+  {
+    id: 'lake-island', name: 'Island in a Still Lake',
+    tags: ['water', 'calm', 'mirror', 'quiet', 'small', 'tree', 'dusk', 'flat'],
+    describe: 'A single small island with one tree in a glassy still lake at dusk, perfectly reflected.',
+    render(ctx, w, h) {
+      const r = lcg(181);
+      wash(ctx, w, h, '#f6c9a0', '#f0dcc6');
+      cir(ctx, w, h, 0.72, 0.26, 0.045, '#fff5d9');
+      ply(ctx, w, h, [[0, 0.52], [0.18, 0.44], [0.42, 0.50], [0.68, 0.43], [1, 0.50], [1, 0.54], [0, 0.54]], '#9c8a9b');
+      water(ctx, w, h, 0.54, 1, '#8fa4b8', '#5e7187', 0, r);
+      elp(ctx, w, h, 0.42, 0.56, 0.14, 0.035, '#4d6b4a');
+      pline(ctx, w, h, [[0.42, 0.55], [0.42, 0.40]], '#4a3627', 0.012);
+      elp(ctx, w, h, 0.42, 0.355, 0.075, 0.07, '#3f6b3d');
+      elp(ctx, w, h, 0.42, 0.62, 0.11, 0.025, 'rgba(50,80,52,0.5)');
+      pline(ctx, w, h, [[0.42, 0.63], [0.42, 0.76]], 'rgba(74,54,39,0.45)', 0.012);
+      elp(ctx, w, h, 0.42, 0.80, 0.065, 0.06, 'rgba(63,107,61,0.4)');
+      for (let i = 0; i < 5; i++) {
+        pline(ctx, w, h, [[0.1 + r() * 0.7, 0.66 + i * 0.07], [0.3 + r() * 0.6, 0.66 + i * 0.07]], 'rgba(255,255,255,0.28)', 0.005);
+      }
+    },
+  },
+  {
+    id: 'cave', name: 'Cave Chamber',
+    tags: ['underground', 'dark', 'dripping', 'enclosed', 'stalactites', 'echo', 'cold', 'wet'],
+    describe: 'A limestone cave chamber: stalactites above, stalagmites below, black still water, dripping echoes.',
+    render(ctx, w, h) {
+      const r = lcg(191);
+      wash(ctx, w, h, '#120f1a', '#1d1826');
+      ply(ctx, w, h, [[0.30, 0], [0.52, 0], [0.74, 1], [0.44, 1]], 'rgba(220,235,255,0.09)');
+      for (let i = 0; i < 11; i++) {
+        const x = i * 0.095 + 0.02, len = 0.14 + r() * 0.26;
+        ply(ctx, w, h, [[x - 0.045, 0], [x + 0.045, 0], [x, len]], '#5b4a52');
+        ply(ctx, w, h, [[x - 0.02, 0], [x + 0.012, 0], [x, len * 0.8]], '#7b6771');
+      }
+      box(ctx, w, h, 0, 0, 1, 0.06, '#3c3038');
+      for (let i = 0; i < 6; i++) {
+        const x = 0.08 + i * 0.17, len = 0.10 + r() * 0.16;
+        ply(ctx, w, h, [[x - 0.05, 0.80], [x + 0.05, 0.80], [x, 0.80 - len]], '#4a3d44');
+      }
+      water(ctx, w, h, 0.80, 1, '#15323a', '#081419', 3, r);
+      elp(ctx, w, h, 0.56, 0.82, 0.16, 0.035, 'rgba(160,220,235,0.18)');
+    },
+  },
+  {
+    id: 'railway-station', name: 'Railway Station',
+    tags: ['man-made', 'steel', 'tracks', 'converging', 'busy', 'glass roof', 'noise', 'grey'],
+    describe: 'A covered railway station: rails converging down the platform, a long arched glass-and-steel roof, a waiting train.',
+    render(ctx, w, h) {
+      wash(ctx, w, h, '#2b2f3c', '#4a4f5e');
+      ply(ctx, w, h, [[0.5, 0.08], [1.02, 0.0], [1.02, 0.62], [0.5, 0.40]], '#6a7183');
+      ply(ctx, w, h, [[0.5, 0.08], [-0.02, 0.0], [-0.02, 0.62], [0.5, 0.40]], '#596073');
+      for (let i = 0; i < 6; i++) {
+        pline(ctx, w, h, [[0.5, 0.18 + i * 0.035], [0.02 + i * 0.06, 0.12 + i * 0.08]], 'rgba(30,34,44,0.7)', 0.006);
+        pline(ctx, w, h, [[0.5, 0.18 + i * 0.035], [0.98 - i * 0.06, 0.12 + i * 0.08]], 'rgba(30,34,44,0.7)', 0.006);
+      }
+      box(ctx, w, h, 0, 0.60, 1, 0.40, '#30343f');
+      ply(ctx, w, h, [[0.46, 0.60], [0.54, 0.60], [0.92, 1], [0.08, 1]], '#565b68');
+      for (const off of [-0.10, 0.10]) {
+        pline(ctx, w, h, [[0.5 + off * 0.25, 0.60], [0.5 + off * 2.6, 1]], '#c6ccd6', 0.009);
+      }
+      for (let i = 0; i < 7; i++) {
+        const t = i / 7, y = 0.62 + t * t * 0.38, sp = 0.05 + t * 0.42;
+        pline(ctx, w, h, [[0.5 - sp, y], [0.5 + sp, y]], 'rgba(70,56,44,0.8)', 0.007);
+      }
+      box(ctx, w, h, 0.41, 0.36, 0.18, 0.26, '#2a4f78');
+      box(ctx, w, h, 0.435, 0.40, 0.13, 0.08, '#aee0f2');
+      cir(ctx, w, h, 0.465, 0.56, 0.015, '#ffeeaa');
+      cir(ctx, w, h, 0.535, 0.56, 0.015, '#ffeeaa');
+    },
+  },
+  {
+    id: 'ferris-wheel', name: 'Ferris Wheel',
+    tags: ['circle', 'rotating', 'lights', 'fairground', 'tall', 'man-made', 'spokes', 'festive'],
+    describe: 'A lit ferris wheel at a fairground at night: a great spoked circle of coloured lights turning slowly.',
+    render(ctx, w, h) {
+      const r = lcg(211);
+      wash(ctx, w, h, '#160f2c', '#3a1f44');
+      starfield(ctx, w, h, 30, 0.6, r);
+      const cx = 0.5, cy = 0.42, rad = 0.33;
+      ply(ctx, w, h, [[cx - 0.02, cy], [cx + 0.02, cy], [cx + 0.17, 0.92], [cx + 0.11, 0.92]], '#4c4258');
+      ply(ctx, w, h, [[cx - 0.02, cy], [cx + 0.02, cy], [cx - 0.11, 0.92], [cx - 0.17, 0.92]], '#4c4258');
+      elps(ctx, w, h, cx, cy, rad, rad * (w / h), '#d9cfe4', 0.012);
+      elps(ctx, w, h, cx, cy, rad * 0.86, rad * 0.86 * (w / h), 'rgba(217,207,228,0.5)', 0.006);
+      const cols = ['#ffd166', '#f4645a', '#5ec3f0', '#9fe88a', '#c58cf0', '#ffa94d'];
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        const ex = cx + Math.cos(a) * rad, ey = cy + Math.sin(a) * rad * (w / h);
+        pline(ctx, w, h, [[cx, cy], [ex, ey]], 'rgba(200,190,215,0.55)', 0.004);
+        cir(ctx, w, h, ex, ey, 0.022, cols[i % 6]);
+      }
+      cir(ctx, w, h, cx, cy, 0.035, '#e8d9f2');
+      box(ctx, w, h, 0, 0.90, 1, 0.10, '#1b1326');
+      speckle(ctx, w, h, 14, 'rgba(255,220,140,0.7)', 0, 1, 0.9, 0.98, 0.008, r);
+    },
+  },
+  {
+    id: 'hot-spring', name: 'Terraced Hot Spring',
+    tags: ['water', 'hot', 'steam', 'terraces', 'mineral', 'sulphur', 'turquoise', 'smell'],
+    describe: 'Terraced mineral hot springs: stepped turquoise pools on white rock, steam rising, a sulphur smell.',
+    render(ctx, w, h) {
+      const r = lcg(221);
+      wash(ctx, w, h, '#c8b89e', '#e7dcc6');
+      for (let i = 0; i < 12; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${(0.05 + r() * 0.1).toFixed(2)})`;
+        ctx.beginPath();
+        ctx.ellipse((0.15 + r() * 0.7) * w, (0.08 + r() * 0.3) * h, 0.14 * w, 0.09 * h, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      box(ctx, w, h, 0, 0.42, 1, 0.58, '#efe6d2');
+      const tiers = [[0.50, 0.52, 0.30, 0.070], [0.42, 0.66, 0.38, 0.085], [0.56, 0.82, 0.44, 0.095]];
+      for (let i = 0; i < tiers.length; i++) {
+        const [x, y, rx, ry] = tiers[i];
+        elp(ctx, w, h, x, y + 0.02, rx * 1.1, ry * 1.1, '#dccfb3');
+        elp(ctx, w, h, x, y, rx, ry, i === 1 ? '#2fb3b8' : '#49c8c4');
+        elp(ctx, w, h, x, y - ry * 0.25, rx * 0.6, ry * 0.4, 'rgba(190,245,245,0.55)');
+      }
+      elp(ctx, w, h, 0.18, 0.46, 0.10, 0.035, '#7fd8d2');
+      speckle(ctx, w, h, 12, 'rgba(255,255,255,0.35)', 0.2, 0.8, 0.30, 0.52, 0.016, r);
+    },
+  },
+  {
+    id: 'rice-terraces', name: 'Rice Terraces',
+    tags: ['green', 'stepped', 'curves', 'wet', 'farmed', 'humid', 'layered', 'man-made'],
+    describe: 'Flooded rice terraces stepping down a hillside in bright green curved bands, each rimmed with water.',
+    render(ctx, w, h) {
+      const r = lcg(231);
+      wash(ctx, w, h, '#b7d2dd', '#dcebe6');
+      ply(ctx, w, h, [[0, 0.30], [0.3, 0.18], [0.65, 0.26], [1, 0.16], [1, 0.34], [0, 0.40]], '#56705a');
+      const greens = ['#6fae4a', '#8cc85c', '#5f9c42', '#a2d472', '#73b74e', '#8ec95e', '#619f44'];
+      for (let i = 0; i < 7; i++) {
+        const y = 0.34 + i * 0.095;
+        curve(ctx, w, h, [[0, y + 0.03], [0.3, y - 0.03], [0.65, y + 0.04], [1, y - 0.02]], greens[i], 0, 1);
+        curve(ctx, w, h, [[0, y + 0.03], [0.3, y - 0.03], [0.65, y + 0.04], [1, y - 0.02]], 'rgba(170,220,235,0.85)', 0.009);
+      }
+      speckle(ctx, w, h, 20, 'rgba(255,255,255,0.22)', 0, 1, 0.5, 1, 0.009, r);
+    },
+  },
+  {
+    id: 'obelisk', name: 'Obelisk on a Plaza',
+    tags: ['stone', 'needle', 'tall', 'thin', 'plaza', 'carved', 'man-made', 'single'],
+    describe: 'A tall thin granite obelisk standing alone on a wide paved plaza, carved, pointing straight up.',
+    render(ctx, w, h) {
+      const r = lcg(241);
+      wash(ctx, w, h, '#4e8fd0', '#bcd9ef');
+      box(ctx, w, h, 0, 0.72, 1, 0.28, '#cfc7b5');
+      for (let i = -5; i <= 5; i++) {
+        pline(ctx, w, h, [[0.5 + i * 0.03, 0.74], [0.5 + i * 0.34, 1]], 'rgba(130,120,104,0.45)', 0.004);
+      }
+      for (let i = 0; i < 4; i++) pline(ctx, w, h, [[0, 0.76 + i * 0.07], [1, 0.76 + i * 0.07]], 'rgba(130,120,104,0.3)', 0.004);
+      box(ctx, w, h, 0.41, 0.66, 0.18, 0.08, '#9e9484');
+      box(ctx, w, h, 0.44, 0.60, 0.12, 0.07, '#b2a894');
+      ply(ctx, w, h, [[0.465, 0.62], [0.535, 0.62], [0.522, 0.14], [0.478, 0.14]], '#d9ccb0');
+      ply(ctx, w, h, [[0.478, 0.14], [0.522, 0.14], [0.50, 0.06]], '#f0e2c0');
+      ply(ctx, w, h, [[0.503, 0.62], [0.535, 0.62], [0.522, 0.14], [0.505, 0.14]], '#b6a88c');
+      for (let i = 0; i < 9; i++) {
+        pline(ctx, w, h, [[0.484, 0.20 + i * 0.045], [0.498, 0.20 + i * 0.045]], 'rgba(110,96,70,0.5)', 0.005);
+      }
+      speckle(ctx, w, h, 10, 'rgba(255,255,255,0.5)', 0, 1, 0.1, 0.3, 0.012, r);
+    },
+  },
+  {
+    id: 'amphitheatre', name: 'Roman Amphitheatre',
+    tags: ['stone', 'oval', 'tiers', 'ruin', 'arches', 'arena', 'ancient', 'concentric'],
+    describe: 'A ruined Roman amphitheatre from above: concentric oval tiers of stone seating around a sandy arena.',
+    render(ctx, w, h) {
+      const r = lcg(251);
+      wash(ctx, w, h, '#8aa15f', '#6c8549');
+      speckle(ctx, w, h, 40, 'rgba(120,145,80,0.6)', 0, 1, 0, 1, 0.02, r);
+      const tiers = [[0.47, '#9a8f74'], [0.41, '#b3a789'], [0.35, '#c6b995'], [0.29, '#a79b80']];
+      for (const [rx, c] of tiers) elp(ctx, w, h, 0.5, 0.52, rx, rx * 0.72 * (w / h), c);
+      elp(ctx, w, h, 0.5, 0.52, 0.22, 0.22 * 0.72 * (w / h), '#ddc89a');
+      elp(ctx, w, h, 0.5, 0.52, 0.14, 0.14 * 0.72 * (w / h), '#c2a46f');
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * Math.PI * 2;
+        pline(ctx, w, h, [
+          [0.5 + Math.cos(a) * 0.23, 0.52 + Math.sin(a) * 0.23 * 0.72 * (w / h)],
+          [0.5 + Math.cos(a) * 0.46, 0.52 + Math.sin(a) * 0.46 * 0.72 * (w / h)],
+        ], 'rgba(96,86,66,0.5)', 0.004);
+      }
+      elps(ctx, w, h, 0.5, 0.52, 0.47, 0.47 * 0.72 * (w / h), '#6e6450', 0.009);
+      ply(ctx, w, h, [[0.80, 0.22], [0.97, 0.14], [0.99, 0.40], [0.86, 0.44]], 'rgba(109,133,73,0.85)');
+    },
+  },
+  {
+    id: 'dam', name: 'Concrete Dam',
+    tags: ['concrete', 'curved', 'huge', 'water', 'man-made', 'grey', 'roaring', 'wall'],
+    describe: 'A huge curved concrete dam wall holding back a reservoir, white water blasting from the spillways.',
+    render(ctx, w, h) {
+      const r = lcg(261);
+      wash(ctx, w, h, '#9db6c6', '#c6d6df');
+      water(ctx, w, h, 0.18, 0.34, '#2d6d8e', '#1d4c68', 3, r);
+      ply(ctx, w, h, [[0, 0.10], [0.20, 0.30], [0.16, 1], [0, 1]], '#5d5a50');
+      ply(ctx, w, h, [[1, 0.10], [0.80, 0.30], [0.84, 1], [1, 1]], '#4e4c44');
+      ctx.fillStyle = '#d6d2c8';
+      ctx.beginPath();
+      ctx.moveTo(0.16 * w, 0.32 * h);
+      ctx.quadraticCurveTo(0.5 * w, 0.44 * h, 0.84 * w, 0.32 * h);
+      ctx.lineTo(0.80 * w, 0.90 * h);
+      ctx.quadraticCurveTo(0.5 * w, 1.0 * h, 0.20 * w, 0.90 * h);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#eeeae0';
+      ctx.beginPath();
+      ctx.moveTo(0.16 * w, 0.30 * h);
+      ctx.quadraticCurveTo(0.5 * w, 0.42 * h, 0.84 * w, 0.30 * h);
+      ctx.lineTo(0.84 * w, 0.345 * h);
+      ctx.quadraticCurveTo(0.5 * w, 0.465 * h, 0.16 * w, 0.345 * h);
+      ctx.closePath(); ctx.fill();
+      for (let i = 0; i < 7; i++) {
+        pline(ctx, w, h, [[0.22 + i * 0.096, 0.40], [0.21 + i * 0.096, 0.94]], 'rgba(150,146,136,0.55)', 0.005);
+      }
+      for (const x of [0.38, 0.62]) {
+        ply(ctx, w, h, [[x - 0.035, 0.44], [x + 0.035, 0.44], [x + 0.075, 1], [x - 0.075, 1]], '#f6f9fb');
+      }
+      water(ctx, w, h, 0.95, 1, '#8fb6c8', '#5e8699', 0, r);
+    },
+  },
+  {
+    id: 'refinery', name: 'Oil Refinery',
+    tags: ['industrial', 'pipes', 'metal', 'flame', 'tanks', 'smell', 'man-made', 'complex'],
+    describe: 'An oil refinery: steel tanks and columns, a tangle of pipes, a flare stack burning off gas, chemical smell.',
+    render(ctx, w, h) {
+      const r = lcg(271);
+      wash(ctx, w, h, '#6b6a74', '#9d9289');
+      box(ctx, w, h, 0, 0.82, 1, 0.18, '#4a4650');
+      for (const [x, tw, th] of [[0.06, 0.16, 0.22], [0.26, 0.13, 0.17], [0.66, 0.15, 0.20]]) {
+        box(ctx, w, h, x, 0.82 - th, tw, th, '#c3c7cc');
+        elp(ctx, w, h, x + tw / 2, 0.82 - th, tw / 2, 0.025, '#e2e6ea');
+        pline(ctx, w, h, [[x, 0.82 - th * 0.5], [x + tw, 0.82 - th * 0.5]], 'rgba(110,116,124,0.7)', 0.005);
+      }
+      for (const [x, cw, top] of [[0.44, 0.055, 0.34], [0.52, 0.045, 0.44], [0.86, 0.05, 0.40]]) {
+        box(ctx, w, h, x, top, cw, 0.82 - top, '#aeb4ba');
+        for (let i = 0; i < 4; i++) pline(ctx, w, h, [[x, top + 0.08 + i * 0.12], [x + cw, top + 0.08 + i * 0.12]], 'rgba(90,96,104,0.8)', 0.005);
+        box(ctx, w, h, x - 0.008, top - 0.02, cw + 0.016, 0.02, '#8d939a');
+      }
+      box(ctx, w, h, 0.345, 0.16, 0.028, 0.66, '#9aa0a6');
+      ply(ctx, w, h, [[0.345, 0.16], [0.373, 0.16], [0.385, 0.08], [0.36, 0.02], [0.335, 0.09]], '#ff8a3c');
+      ply(ctx, w, h, [[0.350, 0.15], [0.368, 0.15], [0.372, 0.09], [0.358, 0.05], [0.344, 0.10]], '#ffd95e');
+      for (let i = 0; i < 4; i++) pline(ctx, w, h, [[0.02, 0.70 + i * 0.035], [0.98, 0.70 + i * 0.035]], i % 2 ? '#8e949c' : '#777d85', 0.008);
+      speckle(ctx, w, h, 16, 'rgba(230,232,236,0.3)', 0, 1, 0.02, 0.3, 0.02, r);
+    },
+  },
+  {
+    id: 'wheat-field', name: 'Wheat Field',
+    tags: ['gold', 'flat', 'open', 'dry', 'rustling', 'horizon', 'warm', 'farmed'],
+    describe: 'An open golden wheat field under a huge pale sky, stalks rustling, a flat empty horizon.',
+    render(ctx, w, h) {
+      const r = lcg(281);
+      wash(ctx, w, h, '#7fb6e0', '#d9eaf4');
+      elp(ctx, w, h, 0.26, 0.20, 0.17, 0.055, 'rgba(255,255,255,0.85)');
+      elp(ctx, w, h, 0.68, 0.13, 0.13, 0.045, 'rgba(255,255,255,0.7)');
+      box(ctx, w, h, 0, 0.56, 1, 0.44, '#d9a93f');
+      ctx.fillStyle = lg(ctx, 0, 0.56 * h, 0, h, [[0, '#e8c05c'], [1, '#b8862c']]);
+      ctx.fillRect(0, 0.56 * h, w, 0.44 * h);
+      pline(ctx, w, h, [[0, 0.56], [1, 0.56]], 'rgba(120,88,24,0.4)', 0.004);
+      ctx.strokeStyle = 'rgba(248,224,150,0.85)';
+      for (let i = 0; i < 60; i++) {
+        const x = r(), y = 0.60 + r() * 0.40, len = 0.06 + r() * 0.10;
+        ctx.lineWidth = Math.max(0.8, 0.004 * S(w, h));
+        ctx.beginPath();
+        ctx.moveTo(x * w, (y + len) * h);
+        ctx.quadraticCurveTo((x + 0.012) * w, y * h, (x + 0.004) * w, (y - 0.02) * h);
+        ctx.stroke();
+      }
+      speckle(ctx, w, h, 30, 'rgba(120,84,20,0.25)', 0, 1, 0.6, 1, 0.006, r);
+    },
+  },
+  {
+    id: 'iceberg', name: 'Iceberg',
+    tags: ['ice', 'floating', 'cold', 'white', 'sea', 'hidden mass', 'blue', 'isolated'],
+    describe: 'An iceberg in a grey sea, white above the waterline and a far larger pale blue mass hanging below it.',
+    render(ctx, w, h) {
+      const r = lcg(291);
+      wash(ctx, w, h, '#8d9aa6', '#c0cbd4');
+      ply(ctx, w, h, [[0.30, 0.48], [0.40, 0.22], [0.52, 0.32], [0.62, 0.18], [0.74, 0.48]], '#f4fbff');
+      ply(ctx, w, h, [[0.52, 0.32], [0.62, 0.18], [0.74, 0.48], [0.56, 0.48]], '#d3e9f5');
+      box(ctx, w, h, 0, 0.48, 1, 0.52, '#2d5570');
+      ctx.fillStyle = lg(ctx, 0, 0.48 * h, 0, h, [[0, '#4b7b96'], [1, '#143548']]);
+      ctx.fillRect(0, 0.48 * h, w, 0.52 * h);
+      ply(ctx, w, h, [[0.26, 0.48], [0.80, 0.48], [0.88, 0.66], [0.70, 0.90], [0.36, 0.94], [0.16, 0.70]], 'rgba(150,215,240,0.55)');
+      ply(ctx, w, h, [[0.34, 0.48], [0.60, 0.48], [0.66, 0.68], [0.48, 0.82], [0.30, 0.64]], 'rgba(200,240,255,0.4)');
+      pline(ctx, w, h, [[0, 0.48], [1, 0.48]], 'rgba(255,255,255,0.75)', 0.006);
+      speckle(ctx, w, h, 10, 'rgba(255,255,255,0.4)', 0, 1, 0.5, 0.56, 0.008, r);
+    },
+  },
+  {
+    id: 'tornado', name: 'Tornado',
+    tags: ['wind', 'funnel', 'grey', 'violent', 'flat land', 'loud', 'spiral', 'moving'],
+    describe: 'A tornado funnel twisting from a black storm cloud down to flat open farmland, debris flying.',
+    render(ctx, w, h) {
+      const r = lcg(301);
+      wash(ctx, w, h, '#40414f', '#8a8469', '#9f9a6c');
+      ctx.fillStyle = '#2b2c38';
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(w, 0); ctx.lineTo(w, 0.26 * h);
+      ctx.bezierCurveTo(0.7 * w, 0.34 * h, 0.3 * w, 0.18 * h, 0, 0.30 * h);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(96,96,110,0.95)';
+      ctx.beginPath();
+      ctx.moveTo(0.34 * w, 0.26 * h);
+      ctx.bezierCurveTo(0.42 * w, 0.52 * h, 0.52 * w, 0.62 * h, 0.52 * w, 0.84 * h);
+      ctx.lineTo(0.60 * w, 0.84 * h);
+      ctx.bezierCurveTo(0.62 * w, 0.60 * h, 0.58 * w, 0.48 * h, 0.62 * w, 0.26 * h);
+      ctx.closePath(); ctx.fill();
+      for (let i = 0; i < 7; i++) {
+        const t = i / 7;
+        const cx = 0.48 + t * 0.08, cy = 0.30 + t * 0.52, rx = 0.14 * (1 - t * 0.78);
+        elps(ctx, w, h, cx, cy, rx, rx * 0.22, 'rgba(190,190,200,0.5)', 0.005);
+      }
+      box(ctx, w, h, 0, 0.84, 1, 0.16, '#7a7347');
+      pline(ctx, w, h, [[0, 0.84], [1, 0.84]], 'rgba(50,46,30,0.5)', 0.004);
+      elp(ctx, w, h, 0.56, 0.845, 0.16, 0.035, 'rgba(140,135,120,0.6)');
+      speckle(ctx, w, h, 18, 'rgba(60,54,38,0.7)', 0.3, 0.85, 0.6, 0.86, 0.007, r);
+    },
+  },
+  {
+    id: 'jungle-river', name: 'Jungle River from Above',
+    tags: ['green', 'winding', 'humid', 'dense', 'brown water', 'aerial', 'snaking', 'tropical'],
+    describe: 'Looking down on a wide brown river snaking through unbroken dark green rainforest canopy.',
+    render(ctx, w, h) {
+      const r = lcg(311);
+      wash(ctx, w, h, '#214d24', '#143417');
+      for (let i = 0; i < 150; i++) {
+        const x = r(), y = r();
+        cir(ctx, w, h, x, y, 0.012 + r() * 0.018, r() < 0.5 ? 'rgba(52,110,48,0.85)' : 'rgba(30,76,32,0.9)');
+      }
+      ctx.strokeStyle = '#7d6a3e';
+      ctx.lineWidth = 0.13 * S(w, h);
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0.10 * w, -0.02 * h);
+      ctx.bezierCurveTo(0.46 * w, 0.26 * h, 0.08 * w, 0.52 * h, 0.44 * w, 0.72 * h);
+      ctx.bezierCurveTo(0.70 * w, 0.86 * h, 0.72 * w, 0.94 * h, 0.96 * w, 1.02 * h);
+      ctx.stroke();
+      ctx.strokeStyle = '#a08c52';
+      ctx.lineWidth = 0.085 * S(w, h);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(214,198,150,0.45)';
+      ctx.lineWidth = 0.02 * S(w, h);
+      ctx.stroke();
+      speckle(ctx, w, h, 20, 'rgba(126,180,80,0.5)', 0, 1, 0, 1, 0.012, r);
+    },
+  },
+  {
+    id: 'ski-slope', name: 'Ski Slope',
+    tags: ['snow', 'white', 'cold', 'slope', 'chairlift', 'pines', 'bright', 'tracks'],
+    describe: 'A groomed white ski slope with dark pines along its edges and a chairlift running up the hill.',
+    render(ctx, w, h) {
+      const r = lcg(321);
+      wash(ctx, w, h, '#3f7fc4', '#a9d2ef');
+      ply(ctx, w, h, [[0, 0.44], [0.22, 0.26], [0.5, 0.40], [0.76, 0.24], [1, 0.42], [1, 0.56], [0, 0.56]], '#e8f2f8');
+      curve(ctx, w, h, [[0, 0.60], [0.3, 0.50], [0.65, 0.58], [1, 0.48]], '#f6fbfe', 0, 1);
+      for (let i = 0; i < 7; i++) pine(ctx, w, h, 0.06 + i * 0.16, 0.74 + (i % 2) * 0.05, 0.16, 0.045, '#1f4530');
+      for (let i = 0; i < 5; i++) pine(ctx, w, h, 0.14 + i * 0.2, 0.98, 0.20, 0.055, '#163826');
+      pline(ctx, w, h, [[0.08, 0.92], [0.92, 0.36]], '#3b3440', 0.005);
+      for (const t of [0.2, 0.45, 0.7]) {
+        const x = 0.08 + t * 0.84, y = 0.92 - t * 0.56;
+        pline(ctx, w, h, [[x, y], [x, y + 0.05]], '#3b3440', 0.004);
+        box(ctx, w, h, x - 0.022, y + 0.05, 0.044, 0.035, '#d7453c');
+      }
+      for (const [x, y] of [[0.14, 0.86], [0.92, 0.30]]) {
+        pline(ctx, w, h, [[x, y], [x, y - 0.14]], '#4a4452', 0.012);
+      }
+      curve(ctx, w, h, [[0.34, 1], [0.42, 0.84], [0.36, 0.72], [0.44, 0.62]], 'rgba(150,185,210,0.7)', 0.007);
+      speckle(ctx, w, h, 12, 'rgba(255,255,255,0.6)', 0, 1, 0.1, 0.4, 0.006, r);
+    },
+  },

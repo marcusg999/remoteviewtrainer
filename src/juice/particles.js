@@ -121,8 +121,11 @@ export class Particles {
       const th = randomFloat() * Math.PI * 2;
       const ph = (randomFloat() - 0.5) * spread;
       const sp = speed * (0.45 + randomFloat() * 0.85);
+      // About a third of the burst is thrown downward, so paper falls past
+      // the card as well as rising off it. An all-upward cone reads thin.
+      const down = randomFloat() < 0.3 ? -0.55 : 1;
       a.aVel.array[idx * 3 + 0] = Math.cos(th) * Math.cos(ph) * sp;
-      a.aVel.array[idx * 3 + 1] = (Math.abs(Math.sin(ph)) + up) * sp * 0.6;
+      a.aVel.array[idx * 3 + 1] = (Math.abs(Math.sin(ph)) + up) * sp * 0.6 * down;
       a.aVel.array[idx * 3 + 2] = Math.sin(th) * Math.cos(ph) * sp;
 
       const c = new THREE.Color(colors[Math.floor(randomFloat() * colors.length)]);

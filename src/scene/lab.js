@@ -231,10 +231,10 @@ export class Lab {
       { x: -0.10, z: -2.65, s: 0.58 },
     ];
     const waxMat = new THREE.MeshStandardMaterial({
-      color: 0xe8ddc4, roughness: 0.65, emissive: 0x2a1c08, emissiveIntensity: 0.3,
+      color: 0xcfc3a6, roughness: 0.78, emissive: 0x1a1105, emissiveIntensity: 0.14,
     });
     const flameMat = new THREE.MeshBasicMaterial({
-      color: 0xf0e0c0, transparent: true, opacity: 0.88, depthWrite: false,
+      color: 0xbfae8a, transparent: true, opacity: 0.72, depthWrite: false,
     });
     const glowTex = this._glowTexture();
 
@@ -266,7 +266,7 @@ export class Lab {
       grp.add(glow);
 
       const light = new THREE.PointLight(0xffb45c, 5.2 * sp.s, 9, 1.85);
-      light.position.y = h + 0.14;
+      light.position.y = h + 0.38;
       if (this.quality === 'high') {
         light.castShadow = true;
         light.shadow.mapSize.set(512, 512);
@@ -293,9 +293,12 @@ export class Lab {
     c.width = c.height = 128;
     const ctx = c.getContext('2d');
     const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-    g.addColorStop(0, 'rgba(255,230,180,1)');
-    g.addColorStop(0.25, 'rgba(255,186,96,0.55)');
-    g.addColorStop(0.6, 'rgba(255,150,60,0.13)');
+    // The centre stop is deliberately not opaque: this sprite composites
+    // additively on top of the flame mesh, and a solid core pushed the sum
+    // to 255 while the card topped out at 230.
+    g.addColorStop(0, 'rgba(255,224,170,0.32)');
+    g.addColorStop(0.25, 'rgba(255,186,96,0.3)');
+    g.addColorStop(0.6, 'rgba(255,150,60,0.11)');
     g.addColorStop(1, 'rgba(255,140,50,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 128, 128);

@@ -178,19 +178,21 @@ export class ZenerRun {
     // Beside the card in open felt, NOT above it. Anchored above, this
     // projects into the HUD band where the stat panels cover its top half
     // and the trial-dot strip runs straight through the letterforms.
-    const anchor = new THREE.Vector3(-1.15, 1.02, -0.18);
+    const anchor = new THREE.Vector3(-0.78, 1.02, 0.05);
 
     // The reaction fires on the card's LAND, not on the flip's start. Before
     // this, the shake and the burst went off while the card was still edge-on
     // and the impact had nothing to hit.
     const react = () => {
+      // the card carries the result at the instant of the reveal
+      card.setOutcome(hit);
       if (hit) {
         card.pop();
         audio.sfxHit(this.streak);
         this.ctx.director.addTrauma(Math.min(0.62, 0.35 + this.streak * 0.07));
         this.ctx.particles.burst(new THREE.Vector3(0, 0.95, -0.5), {
-          count: 38 + this.streak * 7,
-          speed: 3.3, spread: 1.5, size: 0.034, life: 1.0,
+          count: 52 + this.streak * 8,
+          speed: 3.3, spread: 2.6, up: 0.35, size: 0.034, life: 1.1,
           colors: [0x49d17c, 0xe8a33d, 0xfff0cf, 0x9fe8bd],
         });
       } else {
@@ -208,7 +210,7 @@ export class ZenerRun {
       this.streak++;
       this.bestStreak = Math.max(this.bestStreak, this.streak);
 
-      this.ctx.floatText.spawn(anchor, 'HIT', { kind: 'hit' });
+      this.ctx.floatText.spawn(anchor, 'HIT', { kind: 'hit', driftX: -0.1 });
 
       if (this.streak >= 3) {
         await this.ctx.tweens.add({ dur: 0.16 });
@@ -218,13 +220,13 @@ export class ZenerRun {
         );
         this.ctx.director.addTrauma(0.14);
         this.ctx.particles.burst(new THREE.Vector3(1.1, 1.1, -0.2), {
-          count: 18 + this.streak * 4, speed: 2.4, spread: 1.8, size: 0.026, life: 0.8,
+          count: 24 + this.streak * 5, speed: 2.4, spread: 2.4, up: 0.4, size: 0.026, life: 0.9,
           colors: [0xe8a33d, 0xfff0cf],
         });
       }
     } else {
       this.streak = 0;
-      this.ctx.floatText.spawn(anchor, SYMBOL_NAME(target), { kind: 'miss' });
+      this.ctx.floatText.spawn(anchor, SYMBOL_NAME(target), { kind: 'miss', driftX: -0.1 });
     }
 
     this.results.push({ guess: symbol, target, hit, commitment: this.pending.commitment });
@@ -249,7 +251,9 @@ export class ZenerRun {
 
   /** Revealed cards fan out to the left and shrink; the oldest drops away. */
   _retire(card, hit) {
-    card.setOutcome(hit);
+    // outcome already applied on the landing; this only guards a card that
+    // somehow retired without one
+    if (!card.outcomeSet) card.setOutcome(hit);
     this.tableau.push({ card, hit });
     const L0 = this.ctx.lab?.layout ?? { tableauSpread: 0.50, tableauMax: 7, tableauScale: 0.37, tableauZ: 0.62 };
     const MAXT = L0.tableauMax;

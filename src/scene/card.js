@@ -63,7 +63,12 @@ export class Card {
     this.symbol = symbol;
     this.faceUp = false;
 
-    const edge = new THREE.MeshStandardMaterial({ color: 0xcfc4ab, roughness: 0.85 });
+    // Each card owns its edge material: the rim lights up on a hit, and a
+    // shared material would flash every card in the scene at once.
+    const edge = new THREE.MeshStandardMaterial({
+      color: 0xcfc4ab, roughness: 0.85,
+      emissive: new THREE.Color(0x000000), emissiveIntensity: 0,
+    });
     const front = new THREE.MeshStandardMaterial({
       map: faceTexture(symbol), roughness: 0.62, metalness: 0.0,
     });
@@ -109,7 +114,18 @@ export class Card {
 
   setHome(x, y, z) { this.home.set(x, y, z); this.group.position.set(x, y, z); }
 
-  /** Tint a retired card so the row reads as a record of the run. */
+  /**
+   * Apply the outcome to the card itself.
+   *
+   * This used to run at lay-down, roughly 600ms after the reveal, by which
+   * point the card had shrunk into the history row and the player had
+   * stopped looking at it. So at the one moment the whole game exists for,
+   * a hit and a miss rendered the identical card: every bit of outcome
+   * information lived in the air around the object the eye was locked onto,
+   * and none of it in the object. It now fires on the landing and flashes
+   * on the same clock as the land punch, then settles to the resting tint
+   * that keeps the history row legible.
+   */
   setOutcome(hit) {
     this.outcome = hit;
     this.outcomeSet = true;   // stop the flip's brighten-into-land ramp
@@ -120,7 +136,7 @@ export class Card {
       front.color = new THREE.Color(0xffffff);
     } else {
       // pull the miss well down, so one glance reads the whole run
-      front.emissive = new THREE.Color(0x000000);
+      front.emissive = new THREE.Color(0x3a2a4e);
       front.emissiveIntensity = 0;
       front.color = new THREE.Color(0x6e6a78);
     }
@@ -213,8 +229,35 @@ export class Card {
     if (this.landT != null) {
       this.landT += dt;
       const k = clamp01(this.landT / PUNCH_DUR);
-      this.flipScale = 1 + punchAt(k) * 0.14;
-      if (k >= 1) { this.landT = null; this.flipScale = 1; }
+      const p = punchAt(k);
+      this.flipScale = 1 + p * 0.14;
+
+      // The card itself carries the outcome, on the beat. A hit blooms green
+      // and settles to its resting tint; a miss gets a cold violet thud that
+      // decays to nothing, so it is still a physical event.
+      if (this.outcomeSet) {
+        const front = this.mesh.material[4];
+        const edge = this.mesh.material[0];
+        if (this.outcome) {
+          front.emissiveIntensity = 0.35 + p * 0.55;
+          edge.emissive.setHex(0x2fbf6a);
+          edge.emissiveIntensity = p * 0.5;
+        } else {
+          front.emissiveIntensity = p * 0.22;
+          edge.emissive.setHex(0x3a2a4e);
+          edge.emissiveIntensity = p * 0.25;
+        }
+      }
+
+      if (k >= 1) {
+        this.landT = null;
+        this.flipScale = 1;
+        const edge = this.mesh.material[0];
+        edge.emissiveIntensity = 0;
+        if (this.outcomeSet) {
+          this.mesh.material[4].emissiveIntensity = this.outcome ? 0.35 : 0;
+        }
+      }
     }
 
     // smoothed hover state

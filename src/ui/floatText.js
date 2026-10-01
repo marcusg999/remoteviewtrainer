@@ -52,6 +52,7 @@ export class FloatText {
       t: 0,
       dur: o.dur ?? RISE,
       drift: o.drift ?? 0.55,
+      driftX: o.driftX ?? 0,
       jitter: (Math.random() - 0.5) * 26,
       chars,
       seed: Math.random() * 10,
@@ -66,7 +67,8 @@ export class FloatText {
   _place(it, k) {
       _v.copy(it.world).project(this.camera);
       const w = this.layer.clientWidth, h = this.layer.clientHeight;
-      const x = (_v.x * 0.5 + 0.5) * w + it.jitter;
+      const x = (_v.x * 0.5 + 0.5) * w + it.jitter
+        + easeOutCubic(k) * it.driftX * w * 0.18;
       const y = (-_v.y * 0.5 + 0.5) * h - easeOutCubic(k) * it.drift * h * 0.18;
 
       // pop in with overshoot, then shrink slightly as it fades

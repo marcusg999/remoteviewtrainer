@@ -2,7 +2,8 @@
  * Play-test harness. Drives the real build in a real browser, captures console
  * errors, screenshots key moments, and measures frame time.
  *
- * Usage: node tools/play.mjs [outDir] [--mobile] [--url=...]
+ * Usage: node tools/play.mjs [outDir] [--mobile] [--q=low|medium|high]
+ *                             [--turbo=N] [--w=px] [--url=...]
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
@@ -13,9 +14,11 @@ const mobile = process.argv.includes('--mobile');
 const urlArg = process.argv.find(a => a.startsWith('--url='));
 const qArg = process.argv.find(a => a.startsWith('--q='));
 const turboArg = process.argv.find(a => a.startsWith('--turbo='));
-const q = qArg ? qArg.split('=')[1] : 'medium';
-const turbo = turboArg ? turboArg.split('=')[1] : '3';
-const URL = urlArg ? urlArg.split('=')[1]
+const q = qArg ? qArg.slice('--q='.length) : 'medium';
+const turbo = turboArg ? turboArg.slice('--turbo='.length) : '3';
+const wArg = process.argv.find(a => a.startsWith('--w='));
+const vw = wArg ? Number(wArg.slice('--w='.length)) : 1280;
+const URL = urlArg ? urlArg.slice('--url='.length)
   : `http://localhost:5173/?q=${q}&turbo=${turbo}`;
 mkdirSync(outDir, { recursive: true });
 
@@ -31,7 +34,7 @@ const run = async () => {
   const ctx = await browser.newContext(
     mobile
       ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true }
-      : { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 }
+      : { viewport: { width: vw, height: Math.round(vw * 0.625) }, deviceScaleFactor: 1 }
   );
   const page = await ctx.newPage();
 

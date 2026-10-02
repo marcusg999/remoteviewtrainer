@@ -143,14 +143,38 @@ html,body{
 .btn.small{ padding:9px 14px; font-size:13px; border-radius:10px; box-shadow:0 4px 0 var(--panel-lip); }
 
 /* ---------- screens ---------- */
+/*
+ * An inactive screen must be visibility:hidden, not merely opacity:0 with
+ * pointer-events:none.
+ *
+ * pointer-events does not lock a subtree: `.btn` sets pointer-events:auto, so
+ * every button on every hidden screen stayed hit-testable and stacked over the
+ * visible one. document.elementFromPoint at the centre of "Remote Viewing
+ * Session" on the home screen returned the result modal's own buttons — so a
+ * tap on the menu ran a data-act handler instead, and data-act="menu" is
+ * teardownRuns() + show('title'): the player was bounced straight back to the
+ * home screen by the button they had just pressed. Which button they actually
+ * hit depended on the modal's height, which varies with its content, so the
+ * destination varied too.
+ *
+ * visibility IS inherited and a descendant cannot re-enable hit-testing
+ * without setting visibility:visible itself. It also takes hidden screens out
+ * of the tab order, which they never should have been in.
+ *
+ * The 0s visibility transition is delayed by the fade on the way out so the
+ * opacity animation still plays, and undelayed on the way in.
+ */
 .screen{
   position:absolute; inset:0;
   display:flex; flex-direction:column;
   padding:calc(14px + var(--safe-t)) 14px calc(14px + var(--safe-b));
-  opacity:0; pointer-events:none;
-  transition:opacity .28s ease;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transition:opacity .28s ease, visibility 0s linear .28s;
 }
-.screen.on{ opacity:1; pointer-events:auto; }
+.screen.on{
+  opacity:1; visibility:visible; pointer-events:auto;
+  transition:opacity .28s ease, visibility 0s;
+}
 .screen.on.pass-through{ pointer-events:none; }
 .screen.on.pass-through > *{ pointer-events:auto; }
 
@@ -249,10 +273,14 @@ html,body{
   position:absolute; inset:0; display:grid; place-items:center;
   z-index:60;
   background:rgba(4,3,8,.74); backdrop-filter:blur(7px);
-  opacity:0; pointer-events:none; transition:opacity .3s ease;
+  /* Same trap as .screen above: the panel's buttons re-enable pointer-events
+     on themselves, so a dismissed modal kept three live buttons across the
+     whole viewport. */
+  opacity:0; visibility:hidden; pointer-events:none;
+  transition:opacity .3s ease, visibility 0s linear .3s;
   padding:16px;
 }
-.modal.on{ opacity:1; pointer-events:auto; }
+.modal.on{ opacity:1; visibility:visible; pointer-events:auto; transition:opacity .3s ease, visibility 0s; }
 .card-panel{
   width:min(560px,94vw); max-height:88vh; overflow-y:auto;
   background:linear-gradient(180deg,var(--panel-2),var(--panel));

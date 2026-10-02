@@ -159,14 +159,26 @@ function show(name) {
   sceneVisible = (name === 'title' || name === 'zener');
 }
 
-uiLayer.addEventListener('click', (e) => {
+uiLayer.addEventListener('click', async (e) => {
   const go = e.target.closest('[data-go]');
   if (!go) return;
   audio.unlock(); audio.startAmbient();
   const dest = go.dataset.go;
-  if (dest === 'zener') startZener();
-  else if (dest === 'stats') show('stats');
-  else if (dest === 'rv') startRemoteView();
+  // Breadcrumb first. If the tab dies here — which is what "it kicked me back
+  // to the home screen" looks like from the outside — this is the only thing
+  // that survives to say which button was pressed.
+  crumb(`pressed "${go.textContent.trim()}" (${dest})`);
+  // Each branch clears the crumb itself, as soon as its screen is actually up.
+  // Clearing it here instead would never happen for remote viewing, which
+  // awaits the whole session: an ordinary reload mid-session would then be
+  // reported as a crash, and a diagnostic that cries wolf is worse than none.
+  try {
+    if (dest === 'zener') await startZener();
+    else if (dest === 'stats') { show('stats'); crumbClear(); }
+    else if (dest === 'rv') await startRemoteView();
+  } catch (err) {
+    reportError(err, `opening ${dest}`);
+  }
 });
 
 document.getElementById('z-back').addEventListener('click', () => {
@@ -189,6 +201,7 @@ async function startZener() {
   show('zener');
   await run.nextTrial();
   setPickerEnabled(true);
+  crumbClear();                 // the table is dealt and playable
 }
 
 function setPickerEnabled(on) {
@@ -375,6 +388,7 @@ async function startRemoteView() {
   // touch has been shown before the commitment is made.
   await rvRun.begin();
   rvRun.mountUI(host);
+  crumbClear();                 // stage I is mounted and on screen
 
   const rep = await rvRun.finish();
   if (!rep) return;              // dispose() ran first
@@ -464,9 +478,44 @@ function toast(msg, ms = 2600) {
  * where they can be read back out of window.__ganzfeld.errors.
  */
 const errorLog = [];
+
+/**
+ * The black box.
+ *
+ * An in-memory log and an on-screen toast both die with the page, which makes
+ * them useless against the one symptom players actually report: the game
+ * "kicks you back to the home screen". That is what a reloaded tab looks like,
+ * and a reload wipes exactly the evidence needed to explain it. So the last
+ * action and any error are written to sessionStorage as they happen, and read
+ * back on the next boot. Every access is guarded: storage throws outright in
+ * some of the contexts this game runs in, and the recorder must never become
+ * the crash.
+ */
+const BLACKBOX = 'psilab.blackbox.v1';
+function blackboxWrite(patch) {
+  try {
+    const prev = JSON.parse(sessionStorage.getItem(BLACKBOX) || '{}');
+    sessionStorage.setItem(BLACKBOX, JSON.stringify({ ...prev, ...patch }));
+  } catch { /* storage unavailable; the in-memory log still has it */ }
+}
+function crumbClear() { blackboxWrite({ action: null, actionAt: null }); }
+function blackboxRead() {
+  try {
+    const raw = sessionStorage.getItem(BLACKBOX);
+    sessionStorage.removeItem(BLACKBOX);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+/** Breadcrumb: what the player was doing, so a reload still names the moment. */
+function crumb(action) {
+  blackboxWrite({ action, actionAt: new Date().toISOString(), ua: navigator.userAgent });
+}
+
 function reportError(err, where = '') {
   const msg = (err && (err.message || err.reason || err)) || 'unknown error';
   const line = `${where ? where + ': ' : ''}${msg}`;
+  blackboxWrite({ error: String(msg), where, stack: err?.stack ? String(err.stack).slice(0, 600) : null, errorAt: new Date().toISOString() });
   errorLog.push({ at: new Date().toISOString(), where, message: String(msg), stack: err?.stack || null });
   if (errorLog.length > 20) errorLog.shift();
   console.error('[ganzfeld]', line, err);
@@ -570,3 +619,41 @@ window.__ganzfeld = {
 };
 
 console.log(`[ganzfeld] quality=${quality}`);
+
+/**
+ * Read the black box from the page that came before this one. If it still
+ * holds an unfinished action or an error, the last page did not end on
+ * purpose: say so on the title screen, where the player is now standing,
+ * rather than losing it to the reload.
+ */
+const lastRun = blackboxRead();
+if (lastRun && (lastRun.error || lastRun.action)) {
+  const note = el('div', 'crashnote');
+  Object.assign(note.style, {
+    position: 'absolute', left: '50%', bottom: 'calc(10px + var(--safe-b, 0px))',
+    transform: 'translateX(-50%)', width: 'min(92vw, 520px)',
+    background: 'rgba(40,20,26,.97)', border: '2px solid #7a3b48', borderRadius: '12px',
+    padding: '12px 14px', fontSize: '13px', lineHeight: '1.45', zIndex: 80,
+    pointerEvents: 'auto', boxShadow: '0 6px 0 #0d0a14', textAlign: 'left',
+  });
+  note.innerHTML = `
+    <b>The last session ended unexpectedly.</b><br>
+    ${lastRun.action ? `It was in the middle of: <b>${lastRun.action}</b>.<br>` : ''}
+    ${lastRun.error ? `Error: <code>${lastRun.error}</code>${lastRun.where ? ` (${lastRun.where})` : ''}<br>` : 'No error was captured, which points at the browser reloading the tab rather than the game throwing.<br>'}
+    <button class="btn ghost small" data-crash="copy" style="margin-top:8px">Copy report</button>
+    <button class="btn ghost small" data-crash="close" style="margin-top:8px">Dismiss</button>
+  `;
+  uiLayer.appendChild(note);
+  note.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-crash]');
+    if (!b) return;
+    if (b.dataset.crash === 'copy') {
+      const report = JSON.stringify(lastRun, null, 2);
+      try { await navigator.clipboard.writeText(report); b.textContent = 'Copied'; }
+      catch { b.textContent = 'Copy failed — see console'; console.log(report); }
+      return;
+    }
+    note.remove();
+  });
+  console.warn('[ganzfeld] previous session ended unexpectedly:', lastRun);
+}

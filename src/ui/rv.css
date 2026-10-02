@@ -371,7 +371,18 @@
    --------------------------------------------------------------- */
 .rv-evidence{
   position:sticky; top:0; z-index:4;
-  max-height:96px; overflow-y:auto;
+  /* flex:0 0 auto is load-bearing. The stage is a column flex container, and
+     this strip is itself a scroll container, so its implied min-height is 0 —
+     with the default flex-shrink:1 a short viewport crushed it to 18px while
+     its children stayed laid out at full size. They then spilled out and the
+     rank note below painted straight over them. Measured at 390x518 (an
+     iPhone with Safari's chrome showing): box 18px tall, scrollHeight 96,
+     80px of the viewer's own notes clipped away. The strip exists so the
+     notes can be compared against the candidates; crushed, it was worse than
+     absent, because it looked like a rendering fault. */
+  flex:0 0 auto;
+  /* Never take more than a third of a short stage either. */
+  max-height:min(100px, 32vh); overflow-y:auto;
   display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;
   padding:10px 12px; margin:0 0 10px;
   background:rgba(12,10,18,.92);
@@ -397,6 +408,16 @@
   .rv-evidence{ gap:8px; padding:8px; }
   .rv-ev-shot img{ width:72px; height:54px; }
   .rv-ev-shot:nth-of-type(2) img{ width:88px; height:66px; }
+}
+/* A short viewport is the one that actually bites: Safari's chrome can leave
+   barely 500px, and at that height a 96px strip plus the five candidates do
+   not both fit. Shrink the thumbnails rather than clipping them. */
+@media (max-height:620px){
+  .rv-evidence{ gap:8px; padding:7px 8px; }
+  .rv-ev-shot img{ width:56px; height:42px; }
+  .rv-ev-shot:nth-of-type(2) img{ width:68px; height:51px; }
+  .rv-ev-shot figcaption{ font-size:7.5px; margin-top:2px; }
+  .rv-ev-word{ font-size:10px; padding:1px 6px; }
 }
 
 /* The rank state sits on its own line rather than trailing a separator that

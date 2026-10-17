@@ -179,7 +179,15 @@ html,body{
 .screen.on.pass-through > *{ pointer-events:auto; }
 
 /* ---------- title ---------- */
-#title{ align-items:center; justify-content:center; gap:10px; text-align:center;
+/* The title screen centres its content, which is right until the content is
+   taller than the screen. At 320x480 it is 522px tall, and centring overflow
+   strands the ends: the "Image credits" button sat at y=496 in a 480px
+   viewport with nothing to scroll. `safe center` falls back to flex-start
+   rather than overflowing once it no longer fits, and overflow-y lets the
+   rest be reached. The plain `center` above it is the fallback for engines
+   without the `safe` keyword. */
+#title{ align-items:center; justify-content:center; justify-content:safe center;
+  overflow-y:auto; gap:10px; text-align:center;
   background:radial-gradient(ellipse at 50% 42%, rgba(12,9,20,.3), rgba(4,3,8,.86)); }
 #title h1{
   margin:0; font-size:clamp(40px,10vw,84px); line-height:.95;
@@ -492,3 +500,29 @@ html,body{
 }
 .tooearly b{ font-size:22px; color:var(--ink); font-weight:700; white-space:nowrap; }
 .tooearly span{ flex:1 1 220px; min-width:0; font-size:12.5px; line-height:1.55; color:var(--ink-dim); }
+
+/* ---------------------------------------------------------------
+   Image credits
+   --------------------------------------------------------------- */
+.linkbtn{
+  margin-top:10px; background:none; border:0; padding:6px 10px;
+  color:var(--ink-faint); font:inherit; font-size:12px; letter-spacing:.08em;
+  text-transform:uppercase; text-decoration:underline; cursor:pointer;
+  pointer-events:auto;
+}
+.linkbtn:hover{ color:var(--brass); }
+.credits{ display:flex; flex-direction:column; gap:2px; margin:14px 0 6px; }
+.credit-row{
+  display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr) auto auto;
+  gap:8px; align-items:baseline;
+  padding:7px 8px; border-radius:8px; font-size:12px; line-height:1.35;
+}
+.credit-row:nth-child(odd){ background:rgba(255,255,255,.028); }
+.credit-place{ font-weight:800; color:var(--ink); }
+.credit-author{ color:var(--ink-dim); min-width:0; overflow-wrap:anywhere; }
+.credit-lic{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); white-space:nowrap; }
+.credit-src{ font-size:10.5px; color:var(--brass); }
+@media (max-width:520px){
+  .credit-row{ grid-template-columns:minmax(0,1fr) auto; row-gap:2px; }
+  .credit-author{ grid-column:1 / -1; font-size:11px; }
+}

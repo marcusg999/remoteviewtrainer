@@ -247,16 +247,22 @@
   font-size:11.5px; font-weight:900; letter-spacing:.05em; text-transform:uppercase;
   color:var(--rv-dim); line-height:1.25;
 }
+/* The name sits over the photograph, so it gets its own backing. */
+.rv-cand-name{ position:relative; z-index:1; }
 .rv-cand-rank{
   position:absolute; top:7px; left:7px;
   width:30px; height:30px; border-radius:9px;
   display:grid; place-items:center;
   font-size:15px; font-weight:900; font-variant-numeric:tabular-nums;
-  background:rgba(8,6,14,.34); border:2px solid rgba(255,255,255,.14);
-  color:transparent;
+  /* Opaque, not translucent. Over the old flat artwork a 34% scrim read fine;
+     over a photograph it became a murky grey smear with no edge, and an
+     unranked tile looked broken rather than unranked. */
+  background:rgba(8,6,14,.72); border:2px solid rgba(255,255,255,.30);
+  box-shadow:0 1px 6px rgba(0,0,0,.55);
+  color:rgba(245,236,217,.55);
   transition:background .14s, border-color .14s, color .14s, transform .12s;
 }
-.rv-cand:hover .rv-cand-rank{ background:rgba(8,6,14,.6); border-color:rgba(255,255,255,.28); }
+.rv-cand:hover .rv-cand-rank{ background:rgba(8,6,14,.85); border-color:rgba(255,255,255,.45); }
 .rv-cand.ranked{ border-color:var(--rv-brass); }
 .rv-cand.ranked .rv-cand-name{ color:var(--rv-ink); }
 .rv-cand.ranked .rv-cand-rank{ background:#2a2336; border-color:var(--rv-brass); color:var(--rv-ink); transform:scale(1.06); }
@@ -475,3 +481,16 @@
 @media (prefers-reduced-motion: reduce){
   .rv-pad.spent{ animation:none; }
 }
+
+/* ---------------------------------------------------------------
+   Attribution.
+
+   Most of the target pool is CC BY or CC BY-SA, which require the
+   photographer to be credited wherever the image appears. This is the
+   reveal's credit line; the full list lives on the credits screen.
+   --------------------------------------------------------------- */
+.rv-reveal-credit{
+  margin:6px 0 0; font-size:10.5px; line-height:1.45;
+  color:var(--rv-faint, #6d6480); word-break:break-word;
+}
+.rv-reveal-credit a{ color:var(--rv-brass, #c9a26a); }

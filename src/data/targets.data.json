@@ -1,0 +1,1154 @@
+[
+ {
+  "id": "uluru",
+  "name": "Uluru",
+  "lat": -25.3444,
+  "lon": 131.0369,
+  "tags": [
+   "red",
+   "orange",
+   "hot",
+   "dry heat",
+   "vast",
+   "open",
+   "massive",
+   "dust",
+   "rough",
+   "silence"
+  ],
+  "describe": "A single enormous sandstone monolith standing alone on a flat red desert plain, its flanks grooved and burning in the sun.",
+  "credit": {
+   "author": "Ek2030372672",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:ULURU.jpg"
+  }
+ },
+ {
+  "id": "grand-canyon",
+  "name": "Grand Canyon",
+  "lat": 36.1069,
+  "lon": -112.1129,
+  "tags": [
+   "red",
+   "orange",
+   "layered",
+   "deep",
+   "vast",
+   "dry heat",
+   "open",
+   "rough",
+   "silence",
+   "wide"
+  ],
+  "describe": "A colossal layered gorge cut a mile deep into red rock, receding in bands of orange and violet to a hazy horizon.",
+  "credit": {
+   "author": "Lennart Sikkema",
+   "licence": "CC BY 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Canyon_River_Tree_(165872763).jpeg"
+  }
+ },
+ {
+  "id": "salar-uyuni",
+  "name": "Salar de Uyuni",
+  "lat": -20.1338,
+  "lon": -67.4891,
+  "tags": [
+   "white",
+   "flat",
+   "vast",
+   "open",
+   "dry",
+   "cold",
+   "silence",
+   "smooth",
+   "salt",
+   "grainy"
+  ],
+  "describe": "An endless white salt flat, cracked into hexagons, so level that the sky reflects in a skin of water.",
+  "credit": {
+   "author": "Luca Galuzzi (Lucag), edit by Trialsanderrors",
+   "licence": "CC BY-SA 2.5",
+   "page": "https://commons.wikimedia.org/wiki/File:Piles_of_Salt_Salar_de_Uyuni_Bolivia_Luca_Galuzzi_2006_a.jpg"
+  }
+ },
+ {
+  "id": "giants-causeway",
+  "name": "Giant's Causeway",
+  "lat": 55.2408,
+  "lon": -6.5116,
+  "tags": [
+   "grey",
+   "black",
+   "hard",
+   "wet",
+   "cold",
+   "sea air",
+   "crashing",
+   "layered",
+   "rough",
+   "low"
+  ],
+  "describe": "Thousands of interlocking hexagonal basalt columns stepping down into a cold grey sea.",
+  "credit": {
+   "author": "code poet on flickr.",
+   "licence": "CC BY-SA 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Causeway-code_poet-4.jpg"
+  }
+ },
+ {
+  "id": "perito-moreno",
+  "name": "Perito Moreno Glacier",
+  "lat": -50.4967,
+  "lon": -73.1377,
+  "tags": [
+   "white",
+   "blue",
+   "cold",
+   "damp cold",
+   "massive",
+   "vertical",
+   "crashing",
+   "hard",
+   "turquoise",
+   "wet"
+  ],
+  "describe": "A vast glacier wall of blue-white ice calving into a lake, cracking and booming as blocks fall.",
+  "credit": {
+   "author": "Fernando",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Perito_Moreno_Glacier_2023.jpg"
+  }
+ },
+ {
+  "id": "mount-fuji",
+  "name": "Mount Fuji",
+  "lat": 35.3606,
+  "lon": 138.7274,
+  "tags": [
+   "white",
+   "blue",
+   "cold",
+   "tall",
+   "massive",
+   "open",
+   "wind",
+   "silence",
+   "smooth",
+   "vertical"
+  ],
+  "describe": "A near-perfect snow-capped volcanic cone rising alone above low cloud and forest.",
+  "credit": {
+   "author": "Suicasmo",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:View_of_Mount_Fuji_from_%C5%8Cwakudani_20211202.jpg"
+  }
+ },
+ {
+  "id": "iguazu",
+  "name": "Iguazú Falls",
+  "lat": -25.6953,
+  "lon": -54.4367,
+  "tags": [
+   "white",
+   "green",
+   "roaring",
+   "wet",
+   "vegetation",
+   "wide",
+   "vertical",
+   "cool",
+   "rushing",
+   "massive"
+  ],
+  "describe": "A horseshoe of hundreds of waterfalls pouring through dense jungle, the air white with spray and sound.",
+  "credit": {
+   "author": "Mariordo (Mario Roberto Durán Ortiz)",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Aerial_Foz_de_Igua%C3%A7u_26_Nov_2005.jpg"
+  }
+ },
+ {
+  "id": "zhangjiajie",
+  "name": "Zhangjiajie Pillars",
+  "lat": 29.3158,
+  "lon": 110.4345,
+  "tags": [
+   "green",
+   "grey",
+   "tall",
+   "vertical",
+   "narrow",
+   "vegetation",
+   "damp earth",
+   "silence",
+   "layered",
+   "massive"
+  ],
+  "describe": "Hundreds of slender sandstone pillars hundreds of metres tall, forested at the top, rising out of mist.",
+  "credit": {
+   "author": "chensiyuan",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:1_tianzishan_wulingyuan_zhangjiajie_2012.jpg"
+  }
+ },
+ {
+  "id": "pamukkale",
+  "name": "Pamukkale Terraces",
+  "lat": 37.9203,
+  "lon": 29.1211,
+  "tags": [
+   "white",
+   "turquoise",
+   "warm",
+   "wet",
+   "smooth",
+   "layered",
+   "dripping",
+   "slick",
+   "open",
+   "low"
+  ],
+  "describe": "White travertine terraces stepping down a hillside, each basin holding warm turquoise mineral water.",
+  "credit": {
+   "author": "Biologg",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Pamukkale,_Denizli_2026_68.jpg"
+  }
+ },
+ {
+  "id": "antelope-canyon",
+  "name": "Antelope Canyon",
+  "lat": 36.8619,
+  "lon": -111.3743,
+  "tags": [
+   "orange",
+   "red",
+   "narrow",
+   "enclosed",
+   "smooth",
+   "dry",
+   "warm",
+   "silence",
+   "vertical",
+   "deep"
+  ],
+  "describe": "A narrow slot canyon of smooth wind-carved sandstone, glowing orange where light falls from a slit far above.",
+  "credit": {
+   "author": "Lucas Löffler",
+   "licence": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:USA_Antelope-Canyon.jpg"
+  }
+ },
+ {
+  "id": "sossusvlei",
+  "name": "Sossusvlei Dunes",
+  "lat": -24.7272,
+  "lon": 15.3344,
+  "tags": [
+   "orange",
+   "red",
+   "hot",
+   "dry heat",
+   "vast",
+   "smooth",
+   "wind",
+   "open",
+   "grainy",
+   "massive"
+  ],
+  "describe": "Towering rust-orange sand dunes with knife-sharp crests, dead black trees on a white clay pan below.",
+  "credit": {
+   "author": "Daniel Kraft",
+   "licence": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Sossusvlei_Dune_Rippled_cropped.jpg"
+  }
+ },
+ {
+  "id": "plitvice",
+  "name": "Plitvice Lakes",
+  "lat": 44.8654,
+  "lon": 15.582,
+  "tags": [
+   "green",
+   "turquoise",
+   "wet",
+   "vegetation",
+   "rushing",
+   "cool",
+   "layered",
+   "damp earth",
+   "birds",
+   "low"
+  ],
+  "describe": "A staircase of turquoise lakes linked by hundreds of small waterfalls through thick green forest.",
+  "credit": {
+   "author": "Zysko serhii",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:View_in_Plitvice_Lakes_National_Park.jpg"
+  }
+ },
+ {
+  "id": "white-sands",
+  "name": "White Sands",
+  "lat": 32.7791,
+  "lon": -106.1711,
+  "tags": [
+   "white",
+   "hot",
+   "dry heat",
+   "vast",
+   "open",
+   "flat",
+   "smooth",
+   "silence",
+   "grainy",
+   "wide"
+  ],
+  "describe": "Dunes of pure white gypsum sand rolling to a mountain horizon, blinding under a hard blue sky.",
+  "credit": {
+   "author": "Ben Soyka",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:White_Sands_Dunefield_Panorama_2021.jpg"
+  }
+ },
+ {
+  "id": "bryce-canyon",
+  "name": "Bryce Canyon",
+  "lat": 37.593,
+  "lon": -112.1871,
+  "tags": [
+   "orange",
+   "red",
+   "tall",
+   "vertical",
+   "narrow",
+   "dry",
+   "cold",
+   "layered",
+   "rough",
+   "open"
+  ],
+  "describe": "An amphitheatre of thousands of orange rock spires, thin and fluted, packed together below a rim of pines.",
+  "credit": {
+   "author": "King of Hearts",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Inspiration_Point_Bryce_Canyon_November_2018_panorama.jpg"
+  }
+ },
+ {
+  "id": "fingals-cave",
+  "name": "Fingal's Cave",
+  "lat": 56.4319,
+  "lon": -6.3414,
+  "tags": [
+   "black",
+   "grey",
+   "enclosed",
+   "echo",
+   "wet",
+   "cold",
+   "sea air",
+   "vertical",
+   "hard",
+   "deep"
+  ],
+  "describe": "A sea cave of black hexagonal basalt columns, waves booming and echoing inside the cathedral-like space.",
+  "credit": {
+   "author": "The Library of Congress",
+   "licence": "No restrictions",
+   "page": "https://commons.wikimedia.org/wiki/File:Fingal%27s_Cave,_Staffa,_Scotland_LOC_3449519303.jpg"
+  }
+ },
+ {
+  "id": "dead-sea",
+  "name": "Dead Sea Shore",
+  "lat": 31.559,
+  "lon": 35.4732,
+  "tags": [
+   "white",
+   "blue",
+   "hot",
+   "salt",
+   "flat",
+   "open",
+   "smooth",
+   "crumbly",
+   "silence",
+   "low"
+  ],
+  "describe": "A still, heavy, intensely salt sea below sea level, its shore crusted with white salt formations.",
+  "credit": {
+   "author": "لا روسا",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Dead_Sea_beach_00.JPG"
+  }
+ },
+ {
+  "id": "moeraki",
+  "name": "Moeraki Boulders",
+  "lat": -45.3455,
+  "lon": 170.826,
+  "tags": [
+   "grey",
+   "smooth",
+   "round",
+   "wet",
+   "cold",
+   "sea air",
+   "low",
+   "crashing",
+   "hard",
+   "open"
+  ],
+  "describe": "Enormous perfectly spherical grey boulders scattered along a flat beach, half buried in wet sand.",
+  "credit": {
+   "author": "Beast from the Bush",
+   "licence": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Moeraki_Boulders.jpg"
+  }
+ },
+ {
+  "id": "halong-bay",
+  "name": "Hạ Long Bay",
+  "lat": 20.9101,
+  "lon": 107.1839,
+  "tags": [
+   "green",
+   "grey",
+   "wet",
+   "vertical",
+   "tall",
+   "sea air",
+   "silence",
+   "vegetation",
+   "massive",
+   "open"
+  ],
+  "describe": "Thousands of limestone karst towers rising straight out of jade-green water, draped in vegetation.",
+  "credit": {
+   "author": "Taewangkorea",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Ha_Long_Bay_in_2019.jpg"
+  }
+ },
+ {
+  "id": "santorini",
+  "name": "Santorini Cliffs",
+  "lat": 36.4618,
+  "lon": 25.3753,
+  "tags": [
+   "white",
+   "blue",
+   "hot",
+   "dry heat",
+   "vertical",
+   "layered",
+   "sea air",
+   "open",
+   "smooth",
+   "tall"
+  ],
+  "describe": "White cube houses with blue domes stacked down a sheer volcanic cliff above a deep blue caldera.",
+  "credit": {
+   "author": "Giles Laurent",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:1000_Three_domes_of_Oia_in_Santorini_Photo_by_Giles_Laurent.jpg"
+  }
+ },
+ {
+  "id": "venice-canal",
+  "name": "Venice Canal",
+  "lat": 45.4341,
+  "lon": 12.3388,
+  "tags": [
+   "brown",
+   "green",
+   "wet",
+   "narrow",
+   "enclosed",
+   "voices",
+   "damp earth",
+   "echo",
+   "layered",
+   "tall"
+  ],
+  "describe": "A narrow water street between tall ochre buildings, boats moored to striped poles, water lapping at worn stone.",
+  "credit": {
+   "author": "Didier Descouens",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:View_of_the_Grand_Canal_from_Rialto_to_Ca%27Foscari.jpg"
+  }
+ },
+ {
+  "id": "giza",
+  "name": "Great Pyramid of Giza",
+  "lat": 29.9792,
+  "lon": 31.1342,
+  "tags": [
+   "yellow",
+   "brown",
+   "hot",
+   "dry heat",
+   "massive",
+   "tall",
+   "dust",
+   "open",
+   "rough",
+   "vast"
+  ],
+  "describe": "A colossal stepped stone pyramid of pale limestone blocks rising from desert sand.",
+  "credit": {
+   "author": "Douwe C. van der Zee",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Great_Pyramid_of_Giza_-_Pyramid_of_Khufu.jpg"
+  }
+ },
+ {
+  "id": "machu-picchu",
+  "name": "Machu Picchu",
+  "lat": -13.1631,
+  "lon": -72.545,
+  "tags": [
+   "green",
+   "grey",
+   "cool",
+   "tall",
+   "layered",
+   "vertical",
+   "stone",
+   "vegetation",
+   "open",
+   "massive"
+  ],
+  "describe": "Terraced stone ruins on a knife-edge ridge, green peaks dropping away into cloud on every side.",
+  "credit": {
+   "author": "Draceane",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Machu_Picchu,_2023_(012).jpg"
+  }
+ },
+ {
+  "id": "colosseum",
+  "name": "Roman Colosseum",
+  "lat": 41.8902,
+  "lon": 12.4922,
+  "tags": [
+   "brown",
+   "yellow",
+   "warm",
+   "massive",
+   "layered",
+   "enclosed",
+   "echo",
+   "rough",
+   "tall",
+   "voices"
+  ],
+  "describe": "A vast ruined stone amphitheatre of tiered arches, its floor opened to reveal the passages beneath.",
+  "credit": {
+   "author": "FeaturedPics",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Colosseo_2020.jpg"
+  }
+ },
+ {
+  "id": "taj-mahal",
+  "name": "Taj Mahal",
+  "lat": 27.1751,
+  "lon": 78.0421,
+  "tags": [
+   "white",
+   "smooth",
+   "hot",
+   "tall",
+   "symmetrical",
+   "open",
+   "silence",
+   "gold",
+   "massive",
+   "wide"
+  ],
+  "describe": "A symmetrical white marble mausoleum with a great central dome and four minarets, mirrored in a long pool.",
+  "credit": {
+   "author": "Yann; edited by Jim Carter",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Taj_Mahal_(Edited).jpeg"
+  }
+ },
+ {
+  "id": "angkor-wat",
+  "name": "Angkor Wat",
+  "lat": 13.4125,
+  "lon": 103.867,
+  "tags": [
+   "grey",
+   "green",
+   "hot",
+   "vegetation",
+   "massive",
+   "layered",
+   "tall",
+   "damp earth",
+   "rough",
+   "wide"
+  ],
+  "describe": "A huge sandstone temple of stacked towers inside a moat, its walls carved end to end, jungle pressing in.",
+  "credit": {
+   "author": "Bjørn Christian Tørrissen",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Angkor_Wat.jpg"
+  }
+ },
+ {
+  "id": "petra",
+  "name": "Petra",
+  "lat": 30.3285,
+  "lon": 35.4444,
+  "tags": [
+   "red",
+   "orange",
+   "brown",
+   "hot",
+   "dry heat",
+   "vertical",
+   "tall",
+   "massive",
+   "rough",
+   "dust"
+  ],
+  "describe": "An enormous classical facade carved straight into a rose-brown sandstone cliff, columns and an urn cut from the living rock.",
+  "credit": {
+   "author": "Azurfrog",
+   "licence": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Al_Deir_Petra.JPG"
+  }
+ },
+ {
+  "id": "stonehenge",
+  "name": "Stonehenge",
+  "lat": 51.1789,
+  "lon": -1.8262,
+  "tags": [
+   "grey",
+   "green",
+   "cold",
+   "wind",
+   "open",
+   "flat",
+   "massive",
+   "silence",
+   "rough",
+   "low"
+  ],
+  "describe": "A ring of enormous rough-cut standing stones with lintels across the top, alone on open grassland.",
+  "credit": {
+   "author": "garethwiscombe",
+   "licence": "CC BY 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Stonehenge2007_07_30.jpg"
+  }
+ },
+ {
+  "id": "chichen-itza",
+  "name": "Chichén Itzá",
+  "lat": 20.6843,
+  "lon": -88.5678,
+  "tags": [
+   "grey",
+   "green",
+   "hot",
+   "layered",
+   "tall",
+   "massive",
+   "open",
+   "rough",
+   "vegetation",
+   "silence"
+  ],
+  "describe": "A stepped limestone pyramid with steep stairways on four sides, standing on a cleared plain of short grass.",
+  "credit": {
+   "author": "Daniel Schwen",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Chichen_Itza_3.jpg"
+  }
+ },
+ {
+  "id": "hagia-sophia",
+  "name": "Hagia Sophia",
+  "lat": 41.0086,
+  "lon": 28.9802,
+  "tags": [
+   "grey",
+   "brown",
+   "massive",
+   "tall",
+   "layered",
+   "vertical",
+   "wide",
+   "warm",
+   "rough",
+   "open"
+  ],
+  "describe": "A vast grey stone domed building with four tall minarets at its corners, rising above trees and low walls.",
+  "credit": {
+   "author": "Adli Wahid",
+   "licence": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Hagia_Sophia_(228968325).jpeg"
+  }
+ },
+ {
+  "id": "sagrada-familia",
+  "name": "Sagrada Família",
+  "lat": 41.4036,
+  "lon": 2.1744,
+  "tags": [
+   "brown",
+   "gold",
+   "tall",
+   "vertical",
+   "narrow",
+   "massive",
+   "layered",
+   "rough",
+   "open",
+   "machinery"
+  ],
+  "describe": "An unfinished cathedral of tall honey-coloured spires encrusted with carving, cranes still standing against the towers.",
+  "credit": {
+   "author": "Canaan",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:SF_maig_2_cropped.jpg"
+  }
+ },
+ {
+  "id": "mont-saint-michel",
+  "name": "Mont-Saint-Michel",
+  "lat": 48.6361,
+  "lon": -1.5115,
+  "tags": [
+   "grey",
+   "brown",
+   "cold",
+   "sea air",
+   "tall",
+   "vertical",
+   "layered",
+   "wind",
+   "massive",
+   "wet"
+  ],
+  "describe": "A steep island crowned by an abbey, stone streets spiralling up, surrounded by vast tidal sand flats.",
+  "credit": {
+   "author": "Amaustan",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Mont-Saint-Michel_vu_du_ciel.jpg"
+  }
+ },
+ {
+  "id": "potala",
+  "name": "Potala Palace",
+  "lat": 29.6578,
+  "lon": 91.117,
+  "tags": [
+   "white",
+   "red",
+   "cold",
+   "tall",
+   "massive",
+   "layered",
+   "vertical",
+   "wind",
+   "open",
+   "silence"
+  ],
+  "describe": "A huge white and ochre fortress-palace stacked up a hillside in thin, cold mountain air.",
+  "credit": {
+   "author": "Lhasa Government",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Potala_Palace_HQ.jpg"
+  }
+ },
+ {
+  "id": "moai",
+  "name": "Easter Island Moai",
+  "lat": -27.1127,
+  "lon": -109.3497,
+  "tags": [
+   "grey",
+   "green",
+   "wind",
+   "sea air",
+   "tall",
+   "vertical",
+   "open",
+   "silence",
+   "rough",
+   "massive"
+  ],
+  "describe": "A row of enormous carved stone heads with heavy brows standing on a grass platform above the ocean.",
+  "credit": {
+   "author": "Ian Sewell",
+   "licence": "CC BY 2.5",
+   "page": "https://commons.wikimedia.org/wiki/File:AhuTongariki.JPG"
+  }
+ },
+ {
+  "id": "times-square",
+  "name": "Times Square",
+  "lat": 40.758,
+  "lon": -73.9855,
+  "tags": [
+   "red",
+   "yellow",
+   "voices",
+   "traffic",
+   "tall",
+   "enclosed",
+   "vertical",
+   "warm",
+   "machinery",
+   "narrow"
+  ],
+  "describe": "A canyon of skyscrapers plastered with enormous glowing screens, dense with people and traffic noise.",
+  "credit": {
+   "author": "Terabass",
+   "licence": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:New_york_times_square-terabass.jpg"
+  }
+ },
+ {
+  "id": "shibuya",
+  "name": "Shibuya Crossing",
+  "lat": 35.6595,
+  "lon": 139.7005,
+  "tags": [
+   "grey",
+   "blue",
+   "voices",
+   "traffic",
+   "wide",
+   "open",
+   "flat",
+   "machinery",
+   "cool",
+   "layered"
+  ],
+  "describe": "A huge intersection where crowds flood across from every direction at once beneath lit advertising.",
+  "credit": {
+   "author": "David Kernan",
+   "licence": "CC BY 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Shibuya_Crossing,_Aerial.jpg"
+  }
+ },
+ {
+  "id": "burj-khalifa",
+  "name": "Burj Khalifa",
+  "lat": 25.1972,
+  "lon": 55.2744,
+  "tags": [
+   "black",
+   "orange",
+   "tall",
+   "vertical",
+   "narrow",
+   "hot",
+   "dry heat",
+   "massive",
+   "silence",
+   "open"
+  ],
+  "describe": "A needle-thin tower silhouetted against a burning orange sky at dusk, far taller than everything around it.",
+  "credit": {
+   "author": "imran shahabuddin",
+   "licence": "CC BY 2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Burj_Khalifa_(worlds_tallest_building)_and_the_Dubai_skyline_(25781049892).jpg"
+  }
+ },
+ {
+  "id": "golden-gate",
+  "name": "Golden Gate Bridge",
+  "lat": 37.8199,
+  "lon": -122.4783,
+  "tags": [
+   "red",
+   "orange",
+   "grey",
+   "metallic",
+   "tall",
+   "wide",
+   "cold",
+   "wind",
+   "sea air",
+   "massive"
+  ],
+  "describe": "A long orange-red suspension bridge with two tall towers, cables sweeping down, fog rolling through.",
+  "credit": {
+   "author": "Frank Schulenburg",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Golden_Gate_Bridge_as_seen_from_Battery_East.jpg"
+  }
+ },
+ {
+  "id": "sydney-opera",
+  "name": "Sydney Opera House",
+  "lat": -33.8568,
+  "lon": 151.2153,
+  "tags": [
+   "white",
+   "blue",
+   "smooth",
+   "sea air",
+   "layered",
+   "tall",
+   "open",
+   "wide",
+   "mild",
+   "hard"
+  ],
+  "describe": "Interlocking white shell roofs on a harbour point, tiled and curved like sails, water on three sides.",
+  "credit": {
+   "author": "Bernard Spragg. NZ from Christchurch, New Zealand",
+   "licence": "CC0",
+   "page": "https://commons.wikimedia.org/wiki/File:Sydney_Australia._(21339175489).jpg"
+  }
+ },
+ {
+  "id": "eiffel-tower",
+  "name": "Eiffel Tower",
+  "lat": 48.8584,
+  "lon": 2.2945,
+  "tags": [
+   "brown",
+   "grey",
+   "metallic",
+   "tall",
+   "vertical",
+   "narrow",
+   "open",
+   "wind",
+   "cool",
+   "massive"
+  ],
+  "describe": "A tapering iron lattice tower of crossed girders, open to the sky through its structure.",
+  "credit": {
+   "author": "Benh LIEU SONG",
+   "licence": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:Tour_Eiffel_Wikimedia_Commons_(cropped).jpg"
+  }
+ },
+ {
+  "id": "brooklyn-bridge",
+  "name": "Brooklyn Bridge",
+  "lat": 40.7061,
+  "lon": -73.9969,
+  "tags": [
+   "grey",
+   "brown",
+   "metallic",
+   "tall",
+   "wide",
+   "cold",
+   "wind",
+   "traffic",
+   "layered",
+   "vertical"
+  ],
+  "describe": "A suspension bridge with two gothic stone arches and a web of steel cables above a wooden walkway.",
+  "credit": {
+   "author": "Christian David",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Brooklyn_Bridge_and_the_Lower_Manhattan_skyline_from_Pebble_Beach,_New_York.jpg"
+  }
+ },
+ {
+  "id": "grand-central",
+  "name": "Grand Central Terminal",
+  "lat": 40.7527,
+  "lon": -73.9772,
+  "tags": [
+   "grey",
+   "gold",
+   "tall",
+   "massive",
+   "traffic",
+   "voices",
+   "cold",
+   "layered",
+   "vertical",
+   "wide"
+  ],
+  "describe": "The great stone facade of a railway terminal at night, lit windows and a sculpted clock group above the arches, taxis streaming past below.",
+  "credit": {
+   "author": "Fcb981 ; Eric Baetscher (attribution required)",
+   "licence": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Image-Grand_central_Station_Outside_Night_2.jpg"
+  }
+ },
+ {
+  "id": "hoover-dam",
+  "name": "Hoover Dam",
+  "lat": 36.0161,
+  "lon": -114.7377,
+  "tags": [
+   "white",
+   "grey",
+   "massive",
+   "vertical",
+   "deep",
+   "hot",
+   "dry heat",
+   "machinery",
+   "smooth",
+   "narrow"
+  ],
+  "describe": "A colossal concrete arch dam curving between bare rock walls, water far below on one side.",
+  "credit": {
+   "author": "Mariordo (Mario Roberto Durán Ortiz)",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:2017_Aerial_view_Hoover_Dam_4774.jpg"
+  }
+ },
+ {
+  "id": "pripyat-wheel",
+  "name": "Pripyat Ferris Wheel",
+  "lat": 51.408,
+  "lon": 30.0567,
+  "tags": [
+   "yellow",
+   "grey",
+   "metallic",
+   "silence",
+   "cold",
+   "tall",
+   "open",
+   "rough",
+   "creaking",
+   "vertical"
+  ],
+  "describe": "A rusting yellow ferris wheel standing in an abandoned amusement park, trees pushing through the pavement.",
+  "credit": {
+   "author": "Cls14",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Pripyat_ferris_wheel_side.jpg"
+  }
+ },
+ {
+  "id": "panama-locks",
+  "name": "Panama Canal Locks",
+  "lat": 9.0817,
+  "lon": -79.58,
+  "tags": [
+   "grey",
+   "green",
+   "machinery",
+   "wet",
+   "hot",
+   "massive",
+   "wide",
+   "deep",
+   "metallic",
+   "layered"
+  ],
+  "describe": "Enormous concrete lock chambers with steel gates, a ship lifted between walls as water floods in.",
+  "credit": {
+   "author": "randreu",
+   "licence": "CC BY 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Panama_-_Colon,_Gatun_Locks_-_panoramio_(12).jpg"
+  }
+ },
+ {
+  "id": "kennecott-mine",
+  "name": "Bingham Canyon Mine",
+  "lat": 40.5231,
+  "lon": -112.1511,
+  "tags": [
+   "brown",
+   "grey",
+   "layered",
+   "deep",
+   "vast",
+   "dust",
+   "machinery",
+   "dry",
+   "rough",
+   "wide"
+  ],
+  "describe": "A gigantic open-pit mine cut in concentric terraces a kilometre deep, trucks like specks on the benches.",
+  "credit": {
+   "author": "Farragutful",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:2019_Bingham_Canyon_Mine_04.jpg"
+  }
+ },
+ {
+  "id": "chicago-loop",
+  "name": "Chicago Elevated Loop",
+  "lat": 41.8819,
+  "lon": -87.6278,
+  "tags": [
+   "grey",
+   "blue",
+   "metallic",
+   "tall",
+   "vertical",
+   "wide",
+   "cold",
+   "wind",
+   "open",
+   "massive"
+  ],
+  "describe": "A dense wall of tall buildings along a lakefront, glass and steel towers crowded shoulder to shoulder above flat open water.",
+  "credit": {
+   "author": "Euphoria42",
+   "licence": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Chicago_Loop.png"
+  }
+ },
+ {
+  "id": "cape-point",
+  "name": "Cape Point Lighthouse",
+  "lat": -34.3568,
+  "lon": 18.4971,
+  "tags": [
+   "white",
+   "blue",
+   "wind",
+   "sea air",
+   "tall",
+   "vertical",
+   "open",
+   "cold",
+   "crashing",
+   "vast"
+  ],
+  "describe": "A white lighthouse on a high rocky headland, cliffs dropping to two oceans meeting below.",
+  "credit": {
+   "author": "Ernmuhl at lb.wikipedia",
+   "licence": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Goodhope2.jpg"
+  }
+ },
+ {
+  "id": "neuschwanstein",
+  "name": "Neuschwanstein Castle",
+  "lat": 47.5576,
+  "lon": 10.7498,
+  "tags": [
+   "white",
+   "grey",
+   "green",
+   "cold",
+   "tall",
+   "vertical",
+   "layered",
+   "pine",
+   "silence",
+   "massive"
+  ],
+  "describe": "A white fairy-tale castle with blue turrets on a wooded crag, alpine peaks and gorge behind it.",
+  "credit": {
+   "author": "Thomas Wolf, www.foto-tw.de",
+   "licence": "CC BY-SA 3.0 de",
+   "page": "https://commons.wikimedia.org/wiki/File:Schloss_Neuschwanstein_2013.jpg"
+  }
+ }
+]

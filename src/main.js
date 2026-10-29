@@ -11,6 +11,7 @@ import { ZenerRun, TRIALS, CHANCE } from './modes/zener.js';
 import { RemoteViewRun, buildRevealBlock } from './modes/remoteview.js';
 import { SYMBOLS, SYMBOL_LABEL, drawSymbol } from './scene/cardArt.js';
 import { logSession, career, allSessions, wipe, exportJson } from './core/store.js';
+import { CREDITS } from './data/targets.js';
 import { renderCareer } from './ui/career.js';
 import { summarize, verdict } from './core/stats.js';
 import * as audio from './juice/audio.js';
@@ -89,6 +90,7 @@ uiLayer.innerHTML = `
       <button class="btn ghost" data-go="stats">Career Log</button>
     </div>
     <p class="hint" style="margin-top:18px">Keys 1&ndash;5 &middot; or tap</p>
+    <button class="linkbtn" data-go="credits">Image credits</button>
   </section>
 
   <section id="zener" class="screen pass-through">
@@ -109,6 +111,8 @@ uiLayer.innerHTML = `
   <section id="rv" class="screen"></section>
 
   <section id="stats" class="screen"></section>
+
+  <section id="credits" class="screen"></section>
 
   <div class="modal" id="result"><div class="card-panel" id="result-body"></div></div>
 `;
@@ -149,10 +153,17 @@ function drawSymbolLight(ctx, sym, cx, cy, size) {
 /* ---------- screen routing ---------- */
 function show(name) {
   screen = name;
-  for (const id of ['title', 'zener', 'rv', 'stats']) {
+  // #ui is overflow:hidden, but hidden overflow is still *scrollable*
+  // programmatically — scrollIntoView on a control that has fallen off a short
+  // screen will set scrollTop and strand the chrome of every screen after it
+  // by that offset. Nothing should ever rely on the layer being scrolled.
+  uiLayer.scrollTop = 0;
+  uiLayer.scrollLeft = 0;
+  for (const id of ['title', 'zener', 'rv', 'stats', 'credits']) {
     document.getElementById(id).classList.toggle('on', id === name);
   }
   if (name === 'stats') renderStats();
+  if (name === 'credits') renderCredits();
   // The writing screens cover the canvas completely, so stop drawing the lab
   // behind them. It saves a phone's battery and keeps the main thread free
   // for the actual input the player is giving.
@@ -175,6 +186,7 @@ uiLayer.addEventListener('click', async (e) => {
   try {
     if (dest === 'zener') await startZener();
     else if (dest === 'stats') { show('stats'); crumbClear(); }
+    else if (dest === 'credits') { show('credits'); crumbClear(); }
     else if (dest === 'rv') await startRemoteView();
   } catch (err) {
     reportError(err, `opening ${dest}`);
@@ -436,6 +448,46 @@ function teardownRuns() {
   if (run) { run.dispose(); run = null; }
   if (rvRun) { rvRun.dispose(); rvRun = null; }
   floatText.clear();
+}
+
+/* ---------- image credits ---------- */
+/**
+ * Every target photograph, its photographer and its licence.
+ *
+ * This is not decoration. The pool is mostly CC BY and CC BY-SA, which require
+ * the author to be credited wherever the work is shown, and CC BY-SA also
+ * makes the cropped and graded copies shipped here share-alike. Shipping the
+ * images without this screen would not be allowed.
+ */
+function renderCredits() {
+  const host = document.getElementById('credits');
+  const rows = CREDITS.map((c) => `
+    <div class="credit-row">
+      <span class="credit-place">${c.name}</span>
+      <span class="credit-author">${c.author}</span>
+      <span class="credit-lic">${c.licence}</span>
+      ${c.page ? `<a class="credit-src" href="${c.page}" target="_blank" rel="noopener noreferrer">source</a>` : '<span></span>'}
+    </div>`).join('');
+  host.innerHTML = `
+    <div class="topbar">
+      <button class="iconbtn" data-act="back" aria-label="Back">&#8592;</button>
+      <div class="stat"><div class="k">Images</div><div class="v t-mono">${CREDITS.length}</div></div>
+    </div>
+    <div class="scroll">
+      <div class="sheet">
+        <h2 class="outlined">Image Credits</h2>
+        <p class="lede">Every remote-viewing target is a photograph of a real place, taken from
+          Wikimedia Commons. Images are unchanged in content and normalised only in crop, size
+          and grading, so that no candidate stands out for a reason unrelated to what it shows.</p>
+        <div class="credits">${rows}</div>
+        <p class="fineprint">
+          Images marked CC BY or CC BY-SA are used under those licences and are credited above.
+          CC BY-SA additionally makes the normalised copies shipped here share-alike. Images
+          marked public domain, CC0 or no restrictions carry no such obligation.
+        </p>
+      </div>
+    </div>`;
+  host.querySelector('[data-act="back"]').addEventListener('click', () => show('title'));
 }
 
 /* ---------- career log ---------- */

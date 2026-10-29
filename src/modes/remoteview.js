@@ -79,7 +79,7 @@ import { randomCoordinate } from '../core/rng.js';
 import { seal, verify } from '../core/commit.js';
 import { summarize } from '../core/stats.js';
 import { logSession } from '../core/store.js';
-import { TARGETS, CANDIDATES, chooseTargetSet, paintTarget } from '../data/targets.js';
+import { TARGETS, CANDIDATES, chooseTargetSet, paintTarget, loadSet } from '../data/targets.js';
 import { Sketchpad, padTools } from '../ui/sketchpad.js';
 
 /**
@@ -515,12 +515,32 @@ export class RemoteViewRun {
    * too, so a rotate or a window drag does not leave soft thumbnails.
    */
   _paintCandidates() {
+    // The retry is bounded. Unbounded, it re-queued itself every frame for the
+    // life of the page once the node was detached — clientWidth of a removed
+    // element is 0 for ever, so the "wait for layout" condition never cleared.
+    let tries = 0;
     const paint = () => {
-      if (!this._nodes.cands?.length) return;
-      if (!this._nodes.cands[0].canvas.clientWidth) { requestAnimationFrame(paint); return; }
+      if (this._disposed || !this._nodes.cands?.length) return;
+      if (!this._nodes.cands[0].canvas.clientWidth) {
+        if (++tries > 120) return;                 // ~2s, then give up quietly
+        requestAnimationFrame(paint);
+        return;
+      }
+      tries = 0;
       for (const c of this._nodes.cands) paintTarget(c.canvas, c.target);
     };
     requestAnimationFrame(paint);
+
+    // Fetch all five images together. loadSet takes the whole set precisely so
+    // the target cannot be requested on its own — a lone request for it would
+    // put the answer in the network panel before the viewer has ranked.
+    if (!this._imagesRequested) {
+      this._imagesRequested = true;
+      loadSet(this.order)
+        .then(() => { if (!this._disposed) requestAnimationFrame(paint); })
+        .catch(() => { /* render() falls back to the identical placeholder */ });
+    }
+
     if (!this._gridRO && typeof ResizeObserver !== 'undefined' && this._nodes.grid) {
       let lastW = 0;
       this._gridRO = new ResizeObserver(() => {
@@ -929,6 +949,7 @@ export class RemoteViewRun {
   }
 
   dispose() {
+    this._disposed = true;
     this._stopTimer();
     this._gridRO?.disconnect();
     clearTimeout(this._nudgeTimer);
@@ -959,6 +980,16 @@ export function buildRevealBlock(report) {
     `${report.target.name}${report.hit ? '' : ` &middot; you ranked it ${report.rankOfTarget ? ORDINAL[report.rankOfTarget] : 'nowhere'}`}`));
   wrap.appendChild(el('p', 'rv-reveal-desc', report.target.describe));
 
+  // Attribution. Most of the pool is CC BY or CC BY-SA, which require credit
+  // wherever the image is shown — and the reveal is where it is shown largest.
+  const src = TARGETS.find((x) => x.id === report.target.id)?.credit;
+  if (src) {
+    const c = el('p', 'rv-reveal-credit');
+    const page = src.page ? `<a href="${src.page}" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>` : 'Wikimedia Commons';
+    c.innerHTML = `Photograph: ${src.author} · ${src.licence} · ${page}`;
+    wrap.appendChild(c);
+  }
+
   if (report.target.tags?.length) {
     const tags = el('div', 'rv-tags');
     const hit = new Set(report.matchedTags || []);
@@ -984,11 +1015,17 @@ export function buildRevealBlock(report) {
     wrap.appendChild(side);
   }
 
-  // Paint once the element has a measurable width.
+  // Paint once the element has a measurable width. Bounded for the same
+  // reason as the candidate grid: a detached canvas never gains one.
+  let tries = 0;
   const paint = () => {
     const t = TARGETS.find((x) => x.id === report.target.id);
     if (!t) return;
-    if (!canvas.clientWidth) { requestAnimationFrame(paint); return; }
+    if (!canvas.clientWidth) {
+      if (++tries > 120 || !canvas.isConnected) return;
+      requestAnimationFrame(paint);
+      return;
+    }
     paintTarget(canvas, t);
   };
   requestAnimationFrame(paint);

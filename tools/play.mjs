@@ -27,7 +27,7 @@ const errors = [];
 
 const run = async () => {
   const browser = await chromium.launch({
-    executablePath: process.env.CHROME_BIN || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+    executablePath: process.env.CHROME_BIN || undefined,
     args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox',
            '--enable-webgl', '--ignore-gpu-blocklist', '--disable-dev-shm-usage'],
   });

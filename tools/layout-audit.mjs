@@ -28,7 +28,7 @@ const arg = (n, d) => {
 const URL = arg('url', 'http://localhost:5173/?q=low&turbo=8');
 const ONLY = arg('only', null);
 const JSON_OUT = process.argv.includes('--json');
-const EXEC = arg('chrome', '/opt/pw-browsers/chromium-1194/chrome-linux/chrome');
+const EXEC = arg('chrome', process.env.CHROME_BIN || undefined);
 
 /** Worst-case-first. Safari's chrome can leave ~518px on a 390x844 phone. */
 const VIEWPORTS = (arg('viewports', '320x480,320x568,390x518,390x620,390x724,430x844'))

@@ -17,7 +17,7 @@ const mobile = process.argv.includes('--mobile');
 const errors = []; let n = 0;
 
 const b = await chromium.launch({
-  executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  executablePath: process.env.CHROME_BIN || undefined,
   args: ['--use-gl=swiftshader','--enable-unsafe-swiftshader','--no-sandbox','--disable-dev-shm-usage'],
 });
 const ctx = await b.newContext(mobile

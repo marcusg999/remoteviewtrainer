@@ -20,7 +20,7 @@ import { chromium, devices } from 'playwright';
 const URL = (process.argv.find((a) => a.startsWith('--url=')) || '--url=http://localhost:5173/?q=low&turbo=8').slice(6);
 
 const browser = await chromium.launch({
-  executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  executablePath: process.env.CHROME_BIN || undefined,
   args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox'],
 });
 const ctx = await browser.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 724 } });

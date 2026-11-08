@@ -178,6 +178,21 @@ html,body{
 .screen.on.pass-through{ pointer-events:none; }
 .screen.on.pass-through > *{ pointer-events:auto; }
 
+/*
+ * visibility:hidden closes the steady state, but it is delayed by the length
+ * of the fade on the way out — and `.on` is dropped the instant the screen
+ * stops being current. For those 280ms the outgoing screen is still
+ * visibility:visible, so its controls, which opt back into hit-testing
+ * because the layer above them is pointer-events:none, go on answering taps
+ * over the screen that replaced it. Measured on the home screen at 390x664:
+ * for the length of the fade, elementFromPoint at y=564 returned the title's
+ * "Image credits" button while the Zener screen was the current one.
+ *
+ * Hit-testing must die with `.on`, not with the fade. The descendant selector
+ * outranks the controls' own pointer-events:auto, so it needs no !important.
+ */
+.screen:not(.on) *, .modal:not(.on) *{ pointer-events:none; }
+
 /* ---------- title ---------- */
 /* The title screen centres its content, which is right until the content is
    taller than the screen. At 320x480 it is 522px tall, and centring overflow
@@ -328,10 +343,11 @@ html,body{
 .fineprint{ color:var(--ink-faint); font-size:11.5px; line-height:1.6; margin-top:14px; border-top:1px solid var(--line); padding-top:11px; }
 .fineprint code{ background:rgba(0,0,0,.4); padding:1px 5px; border-radius:4px; font-size:10.5px; color:var(--brass); word-break:break-all; }
 
-.toprow{ display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+.toprow{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
 .chip{
   font-family:var(--mono);
   display:inline-flex; align-items:center; gap:6px;
+  flex:0 0 auto; white-space:nowrap;
   background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:999px;
   padding:4px 11px; font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-dim);
 }

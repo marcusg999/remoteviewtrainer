@@ -36,7 +36,7 @@ const URL = arg('url', 'http://localhost:5173/?q=low&turbo=8');
 const WIDTH = Number(arg('w', 390));
 const HEIGHTS = arg('h', '724,664,620').split(',').map(Number);
 const PRINT = process.argv.includes('--print');
-const EXEC = arg('chrome', '/opt/pw-browsers/chromium-1194/chrome-linux/chrome');
+const EXEC = arg('chrome', process.env.CHROME_BIN || undefined);
 
 const browser = await chromium.launch({
   executablePath: EXEC,
